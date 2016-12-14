@@ -1946,7 +1946,7 @@ CGObjCCommonMac::GenerateConstantNSString(const StringLiteral *Literal) {
   auto *GV = new llvm::GlobalVariable(CGM.getModule(), C->getType(), isConstant,
                                       Linkage, C, ".str", nullptr,
                                       llvm::GlobalVariable::NotThreadLocal,
-                                      getContext().getDefaultAS());
+                                      CGM.getContext().getDefaultAS());
   GV->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
   // Don't enforce the target's minimum global alignment, since the only use
   // of the string is via this class initializer.
