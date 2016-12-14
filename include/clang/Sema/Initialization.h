@@ -20,7 +20,6 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Overload.h"
 #include "clang/Sema/Ownership.h"
-#include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
 
@@ -85,7 +84,10 @@ public:
     EK_RelatedResult,
     /// \brief The entity being initialized is a function parameter; function
     /// is member of group of audited CF APIs.
-    EK_Parameter_CF_Audited
+    EK_Parameter_CF_Audited,
+    /// \brief The entity being initialized is a structured binding of a
+    /// decomposition declaration.
+    EK_Binding,
 
     // Note: err_init_conversion_failed in DiagnosticSemaKinds.td uses this
     // enum as an index for its first %select.  When modifying this list,
@@ -127,9 +129,9 @@ private:
   };
 
   union {
-    /// \brief When Kind == EK_Variable, or EK_Member, the VarDecl or
-    /// FieldDecl, respectively.
-    DeclaratorDecl *VariableOrMember;
+    /// \brief When Kind == EK_Variable, EK_Member or EK_Binding, the VarDecl,
+    /// FieldDecl or BindingDecl, respectively.
+    ValueDecl *VariableOrMember;
     
     /// \brief When Kind == EK_RelatedResult, the ObjectiveC method where
     /// result type was implicitly changed to accommodate ARC semantics.
@@ -161,8 +163,8 @@ private:
   InitializedEntity() : ManglingNumber(0) {}
 
   /// \brief Create the initialization entity for a variable.
-  InitializedEntity(VarDecl *Var)
-    : Kind(EK_Variable), Parent(nullptr), Type(Var->getType()),
+  InitializedEntity(VarDecl *Var, EntityKind EK = EK_Variable)
+    : Kind(EK), Parent(nullptr), Type(Var->getType()),
       ManglingNumber(0), VariableOrMember(Var) { }
   
   /// \brief Create the initialization entity for the result of a
@@ -284,9 +286,10 @@ public:
 
 
   /// \brief Create the initialization entity for a base class subobject.
-  static InitializedEntity InitializeBase(ASTContext &Context,
-                                          const CXXBaseSpecifier *Base,
-                                          bool IsInheritedVirtualBase);
+  static InitializedEntity
+  InitializeBase(ASTContext &Context, const CXXBaseSpecifier *Base,
+                 bool IsInheritedVirtualBase,
+                 const InitializedEntity *Parent = nullptr);
 
   /// \brief Create the initialization entity for a delegated constructor.
   static InitializedEntity InitializeDelegation(QualType Type) {
@@ -312,6 +315,11 @@ public:
                                              unsigned Index, 
                                              const InitializedEntity &Parent) {
     return InitializedEntity(Context, Index, Parent);
+  }
+
+  /// \brief Create the initialization entity for a structured binding.
+  static InitializedEntity InitializeBinding(VarDecl *Binding) {
+    return InitializedEntity(Binding, EK_Binding);
   }
 
   /// \brief Create the initialization entity for a lambda capture.
@@ -355,7 +363,7 @@ public:
 
   /// \brief Retrieve the variable, parameter, or field being
   /// initialized.
-  DeclaratorDecl *getDecl() const;
+  ValueDecl *getDecl() const;
   
   /// \brief Retrieve the ObjectiveC method being initialized.
   ObjCMethodDecl *getMethodDecl() const { return MethodDecl; }
@@ -385,6 +393,12 @@ public:
   bool isInheritedVirtualBase() const {
     assert(getKind() == EK_Base && "Not a base specifier");
     return Base & 0x1;
+  }
+
+  /// \brief Determine whether this is an array new with an unknown bound.
+  bool isVariableLengthArrayNew() const {
+    return getKind() == EK_New && dyn_cast_or_null<IncompleteArrayType>(
+                                      getType()->getAsArrayTypeUnsafe());
   }
 
   /// \brief Determine the location of the 'return' keyword when initializing
@@ -654,6 +668,9 @@ public:
     /// temporary object, which is permitted (but not required) by
     /// C++98/03 but not C++0x.
     SK_ExtraneousCopyToTemporary,
+    /// \brief Direct-initialization from a reference-related object in the
+    /// final stage of class copy-initialization.
+    SK_FinalCopy,
     /// \brief Perform a user-defined conversion, either via a conversion
     /// function or via a constructor.
     SK_UserConversion,
@@ -791,6 +808,10 @@ public:
     FK_ReferenceInitOverloadFailed,
     /// \brief Non-const lvalue reference binding to a temporary.
     FK_NonConstLValueReferenceBindingToTemporary,
+    /// \brief Non-const lvalue reference binding to a bit-field.
+    FK_NonConstLValueReferenceBindingToBitfield,
+    /// \brief Non-const lvalue reference binding to a vector element.
+    FK_NonConstLValueReferenceBindingToVectorElement,
     /// \brief Non-const lvalue reference binding to an lvalue of unrelated
     /// type.
     FK_NonConstLValueReferenceBindingToUnrelated,
@@ -828,6 +849,9 @@ public:
     /// \brief Initializer has a placeholder type which cannot be
     /// resolved by initialization.
     FK_PlaceholderType,
+    /// \brief Trying to take the address of a function that doesn't support
+    /// having its address taken.
+    FK_AddressOfUnaddressableFunction,
     /// \brief List-copy-initialization chose an explicit constructor.
     FK_ExplicitConstructor
   };
@@ -882,14 +906,17 @@ public:
   /// \param TopLevelOfInitList true if we are initializing from an expression
   ///        at the top level inside an initializer list. This disallows
   ///        narrowing conversions in C++11 onwards.
+  /// \param TreatUnavailableAsInvalid true if we want to treat unavailable
+  ///        as invalid.
   InitializationSequence(Sema &S, 
                          const InitializedEntity &Entity,
                          const InitializationKind &Kind,
                          MultiExprArg Args,
-                         bool TopLevelOfInitList = false);
+                         bool TopLevelOfInitList = false,
+                         bool TreatUnavailableAsInvalid = true);
   void InitializeFrom(Sema &S, const InitializedEntity &Entity,
                       const InitializationKind &Kind, MultiExprArg Args,
-                      bool TopLevelOfInitList);
+                      bool TopLevelOfInitList, bool TreatUnavailableAsInvalid);
 
   ~InitializationSequence();
   
@@ -944,6 +971,9 @@ public:
   typedef SmallVectorImpl<Step>::const_iterator step_iterator;
   step_iterator step_begin() const { return Steps.begin(); }
   step_iterator step_end()   const { return Steps.end(); }
+
+  typedef llvm::iterator_range<step_iterator> step_range;
+  step_range steps() const { return {step_begin(), step_end()}; }
 
   /// \brief Determine whether this initialization is a direct reference 
   /// binding (C++ [dcl.init.ref]).
@@ -1005,6 +1035,10 @@ public:
   /// \param T The type of the temporary being created.
   void AddExtraneousCopyToTemporary(QualType T);
 
+  /// \brief Add a new step that makes a copy of the input to an object of
+  /// the given type, as the final step in class copy-initialization.
+  void AddFinalCopy(QualType T);
+
   /// \brief Add a new step invoking a conversion function, which is either
   /// a constructor or a conversion function.
   void AddUserConversionStep(FunctionDecl *Function,
@@ -1039,8 +1073,8 @@ public:
   /// \param FromInitList The constructor call is syntactically an initializer
   /// list.
   /// \param AsInitList The constructor is called as an init list constructor.
-  void AddConstructorInitializationStep(CXXConstructorDecl *Constructor,
-                                        AccessSpecifier Access,
+  void AddConstructorInitializationStep(DeclAccessPair FoundDecl,
+                                        CXXConstructorDecl *Constructor,
                                         QualType T,
                                         bool HadMultipleCandidates,
                                         bool FromInitList, bool AsInitList);

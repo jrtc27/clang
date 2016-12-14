@@ -55,37 +55,34 @@
 // and provide correct path to the dynamic linker for MIPS platforms.
 // Also verify that we tell the assembler to target the right ISA and ABI.
 // RUN: %clang %s -### -o %t.o 2>&1 \
-// RUN:     -target mips-unknown-freebsd10.0 -G0 \
+// RUN:     -target mips-unknown-freebsd10.0 \
 // RUN:   | FileCheck --check-prefix=CHECK-MIPS %s
 // CHECK-MIPS: "{{[^" ]*}}ld{{[^" ]*}}"
 // CHECK-MIPS: "-dynamic-linker" "{{.*}}/libexec/ld-elf.so.1"
-// CHECK-MIPS: "-G0"
 // CHECK-MIPS-NOT: "--hash-style={{gnu|both}}"
 // RUN: %clang %s -### -o %t.o 2>&1 \
-// RUN:     -target mipsel-unknown-freebsd10.0 -G0 \
+// RUN:     -target mipsel-unknown-freebsd10.0 \
 // RUN:   | FileCheck --check-prefix=CHECK-MIPSEL %s
 // CHECK-MIPSEL: "{{[^" ]*}}ld{{[^" ]*}}"
 // CHECK-MIPSEL: "-dynamic-linker" "{{.*}}/libexec/ld-elf.so.1"
-// CHECK-MIPSEL: "-G0"
 // CHECK-MIPSEL-NOT: "--hash-style={{gnu|both}}"
 // RUN: %clang %s -### 2>&1 \
-// RUN:     -target mips64-unknown-freebsd10.0 -G0 \
+// RUN:     -target mips64-unknown-freebsd10.0 \
 // RUN:   | FileCheck --check-prefix=CHECK-MIPS64 %s
 // CHECK-MIPS64: "{{[^" ]*}}ld{{[^" ]*}}"
 // CHECK-MIPS64: "-dynamic-linker" "{{.*}}/libexec/ld-elf.so.1"
-// CHECK-MIPS64: "-G0"
 // CHECK-MIPS64-NOT: "--hash-style={{gnu|both}}"
 // RUN: %clang %s -### 2>&1 \
-// RUN:     -target mips64el-unknown-freebsd10.0 -G0 \
+// RUN:     -target mips64el-unknown-freebsd10.0 \
 // RUN:   | FileCheck --check-prefix=CHECK-MIPS64EL %s
 // CHECK-MIPS64EL: "{{[^" ]*}}ld{{[^" ]*}}"
 // CHECK-MIPS64EL: "-dynamic-linker" "{{.*}}/libexec/ld-elf.so.1"
-// CHECK-MIPS64EL: "-G0"
 // CHECK-MIPS64EL-NOT: "--hash-style={{gnu|both}}"
 
 // RUN: %clang -no-canonical-prefixes -target x86_64-pc-freebsd8 -static %s \
 // RUN:   --sysroot=%S/Inputs/multiarch_freebsd64_tree -### 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-STATIC %s
+// CHECK-STATIC: ld{{.*}}" "--eh-frame-hdr" "-Bstatic"
 // CHECK-STATIC: crt1.o
 // CHECK-STATIC: crtbeginT.o
 
@@ -139,4 +136,9 @@
 // RUN: %clang -mcpu=ultrasparc -target sparc64-unknown-freebsd8 %s -### -no-integrated-as 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-SPARC-CPU %s
 // CHECK-SPARC-CPU: cc1{{.*}}" "-target-cpu" "ultrasparc"
-// CHECK-SPARC-CPU: as{{.*}}" "-Av9a
+// CHECK-SPARC-CPU: as{{.*}}" "-Av9
+
+// Check that -G flags are passed to the linker for mips
+// RUN: %clang -target mips-unknown-freebsd %s -### -G0 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-MIPS-G %s
+// CHECK-MIPS-G: ld{{.*}}" "-G0"
