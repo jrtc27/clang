@@ -3223,7 +3223,7 @@ Expr::isNullPointerConstant(ASTContext &Ctx,
           // Check that the only qualifiers are AS qualifiers
           QualType ASQual = Ctx.getAddrSpaceQualType(Unqual, Pointee.getAddressSpace());
           if (Pointee != ASQual)
-            isASValid = false;
+            IsASValid = false;
         }
 
         if (IsASValid && !Unqual.hasQualifiers() &&
