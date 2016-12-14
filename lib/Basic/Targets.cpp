@@ -7328,7 +7328,7 @@ public:
 };
 
 class MipsTargetInfo : public TargetInfo {
-  void setDataLayout() {
+  virtual void setDataLayout() {
     StringRef Layout;
 
     if (ABI == "o32")
@@ -7928,7 +7928,8 @@ public:
 struct MipsCheriTargetInfo : public MipsTargetInfo {
   int CapSize;
   const char *Desc;
-  MipsCheriTargetInfo(const llvm::Triple &Triple) : MipsTargetInfo(Triple) {
+  MipsCheriTargetInfo(const llvm::Triple &Triple, const TargetOptions &TargetOptions)
+      : MipsTargetInfo(Triple, TargetOptions) {
     IsCheri = true;
     if (Cheri128) {
       Desc = "E-m:m-pf200:128:128-i8:8:32-i16:16:32-i64:64-n32:64-S128";
@@ -7941,14 +7942,14 @@ struct MipsCheriTargetInfo : public MipsTargetInfo {
     }
   }
 
-  void setDataLayoutString() override {
-    StringRef Layout = Desc;
+  void setDataLayout() override {
+    std::string Layout = Desc;
     if (CapabilityABI) {
       Layout += "-A200";
       // Superclass defaults to 128, so we don't need to set this for CHERI128.
       DefaultAlignForAttributeAligned = CapSize;
     }
-    resetDataLayout(Layout);
+    resetDataLayout(Layout.c_str());
   }
 
   unsigned getIntCapWidth() const override { return CapSize; }
@@ -8644,15 +8645,17 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
   case llvm::Triple::cheri:
     switch (os) {
     case llvm::Triple::Linux:
-      return new LinuxTargetInfo<MipsCheriTargetInfo>(Triple);
+      return new LinuxTargetInfo<MipsCheriTargetInfo>(Triple, Opts);
     case llvm::Triple::RTEMS:
-      return new RTEMSTargetInfo<MipsCheriTargetInfo>(Triple);
+      return new RTEMSTargetInfo<MipsCheriTargetInfo>(Triple, Opts);
     case llvm::Triple::FreeBSD:
-      return new FreeBSDTargetInfo<MipsCheriTargetInfo>(Triple);
+      return new FreeBSDTargetInfo<MipsCheriTargetInfo>(Triple, Opts);
     case llvm::Triple::NetBSD:
-      return new NetBSDTargetInfo<MipsCheriTargetInfo>(Triple);
+      return new NetBSDTargetInfo<MipsCheriTargetInfo>(Triple, Opts);
+    case llvm::Triple::OpenBSD:
+      return new OpenBSDTargetInfo<MipsCheriTargetInfo>(Triple, Opts);
     default:
-      return new MipsCheriTargetInfo(Triple);
+      return new MipsCheriTargetInfo(Triple, Opts);
     }
 
   case llvm::Triple::mips64el:
