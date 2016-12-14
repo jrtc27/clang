@@ -59,6 +59,7 @@ protected:
   bool BigEndian;
   bool TLSSupported;
   bool NoAsmVariants;  // True if {|} are normal characters.
+  bool HasFloat128;
   bool CapabilityABI = false;
   unsigned char PointerWidth, PointerAlign;
   unsigned char BoolWidth, BoolAlign;
