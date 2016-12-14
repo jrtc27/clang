@@ -1547,7 +1547,8 @@ GenerateMethodList(StringRef ClassName,
   ConstantInitBuilder Builder(CGM);
 
   auto MethodList = Builder.beginStruct();
-  MethodList.addNullPointer(CGM.Int8PtrTy, CGM.getContext().getDefaultAS());
+  MethodList.addNullPointer(llvm::PointerType::get(CGM.Int8PtrTy,
+                                                   CGM.getContext().getDefaultAS()));
   MethodList.addInt(Int32Ty, MethodTypes.size());
 
   // Get the method structure type.
