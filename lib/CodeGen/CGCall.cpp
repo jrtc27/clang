@@ -4187,6 +4187,7 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
           llvm::Value *V = CI;
           if (V->getType() != RetIRTy)
             V = Builder.CreateBitCast(V, RetIRTy);
+          const Decl *TargetDecl = Callee.getAbstractInfo().getCalleeDecl();
           if (TargetDecl && RetTy->isPointerType()) {
             // By the time this is called, we've got the canonical form of the
             // function type, stripping typedefs.  We need to rediscover them to
