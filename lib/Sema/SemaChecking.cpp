@@ -1703,7 +1703,6 @@ bool Sema::CheckMipsBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
 
   return SemaBuiltinConstantArgRange(TheCall, i, l, u) ||
          SemaBuiltinConstantArgMultiple(TheCall, i, m);
->>>>>>> source/master
 }
 
 bool Sema::CheckPPCBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
@@ -2802,7 +2801,6 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
 
   // For a __c11 builtin, this should be a pointer to an _Atomic type.
   QualType AtomTy = pointerType->getPointeeType(); // 'A'
-  unsigned PointerAS = AtomTy.getAddressSpace();
   QualType ValType = AtomTy; // 'C'
   if (IsC11) {
     if (!AtomTy->isAtomicType()) {
