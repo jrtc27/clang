@@ -7395,6 +7395,8 @@ public:
 
   bool processorSupportsGPR64() const {
     return llvm::StringSwitch<bool>(CPU)
+        .Case("cheri", true)
+        .Case("cheri128", true)
         .Case("mips3", true)
         .Case("mips4", true)
         .Case("mips5", true)
