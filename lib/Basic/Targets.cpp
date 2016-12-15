@@ -7663,7 +7663,7 @@ public:
     // found in 64-bit processors. In the case of O32 on a 64-bit processor,
     // the instructions exist but using them violates the ABI since they
     // require 64-bit GPRs and O32 only supports 32-bit GPRs.
-    if (ABI == "n32" || ABI == "n64")
+    if (ABI == "n32" || ABI == "n64" || ABI == "sandbox")
       Builder.defineMacro("__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8");
   }
 
@@ -7882,7 +7882,7 @@ public:
   }
 
   bool hasInt128Type() const override {
-    return ABI == "n32" || ABI == "n64";
+    return ABI == "n32" || ABI == "n64" || ABI == "sandbox";
   }
 
   bool validateTarget(DiagnosticsEngine &Diags) const override {
@@ -7894,7 +7894,7 @@ public:
     }
 
     // 64-bit ABI's require 64-bit CPU's.
-    if (!processorSupportsGPR64() && (ABI == "n32" || ABI == "n64")) {
+    if (!processorSupportsGPR64() && (ABI == "n32" || ABI == "n64" || ABI == "sandbox")) {
       Diags.Report(diag::err_target_unsupported_abi) << ABI << CPU;
       return false;
     }
@@ -7932,11 +7932,11 @@ struct MipsCheriTargetInfo : public MipsTargetInfo {
       : MipsTargetInfo(Triple, TargetOptions) {
     IsCheri = true;
     if (Cheri128) {
-      Desc = "E-m:m-pf200:128:128-i8:8:32-i16:16:32-i64:64-n32:64-S128";
+      Desc = "E-m:e-pf200:128:128-i8:8:32-i16:16:32-i64:64-n32:64-S128";
       CapSize = 128;
       setCPU("cheri128");
     } else {
-      Desc = "E-m:m-pf200:256:256-i8:8:32-i16:16:32-i64:64-n32:64-S128";
+      Desc = "E-m:e-pf200:256:256-i8:8:32-i16:16:32-i64:64-n32:64-S128";
       CapSize = 256;
       setCPU("cheri");
     }
