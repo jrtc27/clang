@@ -1,6 +1,6 @@
 // RUN: %clang %s -target cheri-unknown-freebsd -o - -emit-llvm -S | FileCheck %s
 
-// XFAIL:
+// XFAIL: *
 
 typedef __capability struct foo* foo_c;
 typedef struct foo* foo_t;
