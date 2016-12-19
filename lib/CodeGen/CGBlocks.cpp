@@ -125,9 +125,10 @@ static llvm::Constant *buildBlockDescriptor(CodeGenModule &CGM,
   else
     elements.addNullPointer(i8p);
 
-  unsigned AddrSpace = 0;
   if (C.getLangOpts().OpenCL)
     AddrSpace = C.getTargetAddressSpace(LangAS::opencl_constant);
+  else
+    AddrSpace = CGM.getContext().getDefaultAS();
 
   llvm::GlobalVariable *global =
     elements.finishAndCreateGlobal("__block_descriptor_tmp",
