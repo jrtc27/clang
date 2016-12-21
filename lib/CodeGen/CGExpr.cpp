@@ -3856,11 +3856,9 @@ CGCallee CodeGenFunction::EmitCallee(const Expr *E) {
   if (auto ICE = dyn_cast<ImplicitCastExpr>(E)) {
     if (ICE->getCastKind() == CK_FunctionToPointerDecay ||
         ICE->getCastKind() == CK_BuiltinFnToFnPtr) {
-      auto SubExpr = ICE->getSubExpr();
-      auto From = cast<PointerType>(SubExpr->getType())->getPointeeType();
-      auto To = cast<PointerType>(ICE->getType())->getPointeeType();
+      auto To = cast<PointerType>(E->getType())->getPointeeType();
       // Don't strip address space casts
-      if (From.getAddressSpace() == To.getAddressSpace())
+      if (To.getAddressSpace() == 0)
         return EmitCallee(ICE->getSubExpr());
     }
 
