@@ -125,6 +125,7 @@ static llvm::Constant *buildBlockDescriptor(CodeGenModule &CGM,
   else
     elements.addNullPointer(i8p);
 
+  unsigned AddrSpace;
   if (C.getLangOpts().OpenCL)
     AddrSpace = C.getTargetAddressSpace(LangAS::opencl_constant);
   else
