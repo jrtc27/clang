@@ -3737,8 +3737,15 @@ bool Sema::SemaBuiltinVAStartImpl(CallExpr *TheCall) {
              if (!Type->isEnumeralType())
                return true;
              const EnumDecl *ED = Type->getAs<EnumType>()->getDecl();
+             // Strip address space from enum type, since the promotion type is
+             // a builtin without an address space.
+             auto Qual = Type.getQualifiers();
+             Qual.removeAddressSpace();
+             auto StrippedType = Context.getQualifiedType(Type.getUnqualifiedType(),
+                                                          Qual);
              return !(ED &&
-                      Context.typesAreCompatible(ED->getPromotionType(), Type));
+                      Context.typesAreCompatible(ED->getPromotionType(),
+                                                 StrippedType));
            }()) {
     unsigned Reason = 0;
     if (Type->isReferenceType())  Reason = 1;
