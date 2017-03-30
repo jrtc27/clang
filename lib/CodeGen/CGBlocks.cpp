@@ -728,11 +728,15 @@ llvm::Value *CodeGenFunction::EmitBlockLiteral(const CGBlockInfo &blockInfo) {
   llvm::Value *blockFn;
   // FIXME: Hide this logic in the target somewhere
   if (getContext().getTargetInfo().areAllPointersCapabilities()) {
-    llvm::Value *PCC = Builder.CreateCall(
-      CGM.getIntrinsic(llvm::Intrinsic::cheri_pcc_get), {});
-    blockFn = Builder.CreatePtrToInt(blockFnConstant, Int64Ty);
-    blockFn = setPointerOffset(PCC, blockFn);
-    blockFn = Builder.CreateBitCast(blockFn, VoidPtrTy);
+    unsigned CapAS = CGM.getTargetCodeGenInfo().getMemoryCapabilityAS();
+    if (blockFnConstant->getType()->getPointerAddressSpace() != CapAS) {
+      llvm::Value *PCC = Builder.CreateCall(
+        CGM.getIntrinsic(llvm::Intrinsic::cheri_pcc_get), {});
+      blockFn = Builder.CreatePtrToInt(blockFnConstant, Int64Ty);
+      blockFn = setPointerOffset(PCC, blockFn);
+      blockFn = Builder.CreateBitCast(blockFn, VoidPtrTy);
+    } else
+      blockFn = globalBlockFn;
   } else
     blockFn = globalBlockFn;
 
@@ -1286,7 +1290,8 @@ CodeGenFunction::GenerateBlockFunction(GlobalDecl GD,
 
   StringRef name = CGM.getBlockMangledName(GD, blockDecl);
   llvm::Function *fn = llvm::Function::Create(
-      fnLLVMType, llvm::GlobalValue::InternalLinkage, name, &CGM.getModule());
+      fnLLVMType, llvm::GlobalValue::InternalLinkage, name, &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(blockDecl, fn, fnInfo);
 
   // Begin generating the function.
@@ -1519,7 +1524,8 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
 
   llvm::Function *Fn =
     llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
-                           "__copy_helper_block_", &CGM.getModule());
+                           "__copy_helper_block_", &CGM.getModule(),
+                           CGM.getTargetCodeGenInfo().getFunctionAS());
 
   IdentifierInfo *II
     = &CGM.getContext().Idents.get("__copy_helper_block_");
@@ -1695,7 +1701,8 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
 
   llvm::Function *Fn =
     llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
-                           "__destroy_helper_block_", &CGM.getModule());
+                           "__destroy_helper_block_", &CGM.getModule(),
+                           CGM.getTargetCodeGenInfo().getFunctionAS());
 
   IdentifierInfo *II
     = &CGM.getContext().Idents.get("__destroy_helper_block_");
@@ -1944,7 +1951,8 @@ generateByrefCopyHelper(CodeGenFunction &CGF, const BlockByrefInfo &byrefInfo,
   // internal linkage.
   llvm::Function *Fn =
     llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
-                           "__Block_byref_object_copy_", &CGF.CGM.getModule());
+                           "__Block_byref_object_copy_", &CGF.CGM.getModule(),
+                           CGF.CGM.getTargetCodeGenInfo().getFunctionAS());
 
   IdentifierInfo *II
     = &Context.Idents.get("__Block_byref_object_copy_");
@@ -2020,7 +2028,8 @@ generateByrefDisposeHelper(CodeGenFunction &CGF,
   llvm::Function *Fn =
     llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
                            "__Block_byref_object_dispose_",
-                           &CGF.CGM.getModule());
+                           &CGF.CGM.getModule(),
+                           CGF.CGM.getTargetCodeGenInfo().getFunctionAS());
 
   IdentifierInfo *II
     = &Context.Idents.get("__Block_byref_object_dispose_");

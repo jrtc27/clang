@@ -263,7 +263,8 @@ void CGOpenMPRuntimeNVPTX::WorkerFunctionState::createWorkerFunction(
 
   WorkerFn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(*CGFI), llvm::GlobalValue::InternalLinkage,
-      /* placeholder */ "_worker", &CGM.getModule());
+      /* placeholder */ "_worker", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, WorkerFn, *CGFI);
 }
 
@@ -1283,7 +1284,8 @@ llvm::Value *emitReduceScratchpadFunction(CodeGenModule &CGM,
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      "_omp_reduction_load_and_reduce", &CGM.getModule());
+      "_omp_reduction_load_and_reduce", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*DC=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   // We don't need debug information in this function as nothing here refers to
@@ -1408,7 +1410,8 @@ llvm::Value *emitCopyToScratchpad(CodeGenModule &CGM,
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      "_omp_reduction_copy_to_scratchpad", &CGM.getModule());
+      "_omp_reduction_copy_to_scratchpad", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*DC=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   // We don't need debug information in this function as nothing here refers to
@@ -1493,7 +1496,8 @@ static llvm::Value *emitInterWarpCopyFunction(CodeGenModule &CGM,
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      "_omp_reduction_inter_warp_copy_func", &CGM.getModule());
+      "_omp_reduction_inter_warp_copy_func", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*DC=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   // We don't need debug information in this function as nothing here refers to
@@ -1748,7 +1752,8 @@ emitShuffleAndReduceFunction(CodeGenModule &CGM,
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      "_omp_reduction_shuffle_and_reduce_func", &CGM.getModule());
+      "_omp_reduction_shuffle_and_reduce_func", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   // We don't need debug information in this function as nothing here refers to

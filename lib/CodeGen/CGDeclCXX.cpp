@@ -271,7 +271,8 @@ llvm::Function *CodeGenModule::CreateGlobalInitOrDestructFunction(
     SourceLocation Loc, bool TLS) {
   llvm::Function *Fn =
     llvm::Function::Create(FTy, llvm::GlobalValue::InternalLinkage,
-                           Name, &getModule());
+                           Name, &getModule(),
+                           getTargetCodeGenInfo().getFunctionAS());
   if (!getLangOpts().AppleKext && !TLS) {
     // Set the section if needed.
     if (const char *Section = getTarget().getStaticInitSectionSpecifier())

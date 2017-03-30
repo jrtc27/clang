@@ -3861,7 +3861,8 @@ llvm::Function *CGObjCCommonMac::GenerateMethod(const ObjCMethodDecl *OMD,
     llvm::Function::Create(MethodTy,
                            llvm::GlobalValue::InternalLinkage,
                            Name.str(),
-                           &CGM.getModule());
+                           &CGM.getModule(),
+                           CGM.getTargetCodeGenInfo().getFunctionAS());
   MethodDefinitions.insert(std::make_pair(OMD, Method));
 
   return Method;

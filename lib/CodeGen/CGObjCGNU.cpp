@@ -2609,7 +2609,7 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
   llvm::Function * LoadFunction = llvm::Function::Create(
       llvm::FunctionType::get(llvm::Type::getVoidTy(VMContext), false),
       llvm::GlobalValue::InternalLinkage, ".objc_load_function",
-      &TheModule);
+      &TheModule, CGM.getTargetCodeGenInfo().getFunctionAS());
   llvm::BasicBlock *EntryBB =
       llvm::BasicBlock::Create(VMContext, "entry", LoadFunction);
   CGBuilderTy Builder(CGM, VMContext);
@@ -2629,7 +2629,7 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
     llvm::Function *RegisterAlias = llvm::Function::Create(
       RegisterAliasTy,
       llvm::GlobalValue::ExternalWeakLinkage, "class_registerAlias_np",
-      &TheModule);
+      &TheModule, CGM.getTargetCodeGenInfo().getFunctionAS());
     llvm::BasicBlock *AliasBB =
       llvm::BasicBlock::Create(VMContext, "alias", LoadFunction);
     llvm::BasicBlock *NoAliasBB =
@@ -2683,7 +2683,8 @@ llvm::Function *CGObjCGNU::GenerateMethod(const ObjCMethodDecl *OMD,
     = llvm::Function::Create(MethodTy,
                              llvm::GlobalValue::InternalLinkage,
                              FunctionName,
-                             &TheModule);
+                             &TheModule,
+                             CGM.getTargetCodeGenInfo().getFunctionAS());
   return Method;
 }
 

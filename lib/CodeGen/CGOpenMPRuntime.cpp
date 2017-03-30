@@ -757,7 +757,8 @@ emitCombinerOrInitializer(CodeGenModule &CGM, QualType Ty,
   auto *FnTy = CGM.getTypes().GetFunctionType(FnInfo);
   auto *Fn = llvm::Function::Create(
       FnTy, llvm::GlobalValue::InternalLinkage,
-      IsCombiner ? ".omp_combiner." : ".omp_initializer.", &CGM.getModule());
+      IsCombiner ? ".omp_combiner." : ".omp_initializer.", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, Fn, FnInfo);
   Fn->removeFnAttr(llvm::Attribute::NoInline);
   Fn->addFnAttr(llvm::Attribute::AlwaysInline);
@@ -2201,7 +2202,8 @@ static llvm::Value *emitCopyprivateCopyFunction(
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      ".omp.copyprivate.copy_func", &CGM.getModule());
+      ".omp.copyprivate.copy_func", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   CGF.StartFunction(GlobalDecl(), C.VoidTy, Fn, CGFI, Args);
@@ -3321,7 +3323,8 @@ emitProxyTaskFunction(CodeGenModule &CGM, SourceLocation Loc,
   auto *TaskEntryTy = CGM.getTypes().GetFunctionType(TaskEntryFnInfo);
   auto *TaskEntry =
       llvm::Function::Create(TaskEntryTy, llvm::GlobalValue::InternalLinkage,
-                             ".omp_task_entry.", &CGM.getModule());
+                             ".omp_task_entry.", &CGM.getModule(),
+                             CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, TaskEntry, TaskEntryFnInfo);
   CodeGenFunction CGF(CGM);
   CGF.disableDebugInfo();
@@ -3416,7 +3419,8 @@ static llvm::Value *emitDestructorsFunction(CodeGenModule &CGM,
   auto *DestructorFnTy = CGM.getTypes().GetFunctionType(DestructorFnInfo);
   auto *DestructorFn =
       llvm::Function::Create(DestructorFnTy, llvm::GlobalValue::InternalLinkage,
-                             ".omp_task_destructor.", &CGM.getModule());
+                             ".omp_task_destructor.", &CGM.getModule(),
+                             CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, DestructorFn,
                                     DestructorFnInfo);
   CodeGenFunction CGF(CGM);
@@ -3503,7 +3507,8 @@ emitTaskPrivateMappingFunction(CodeGenModule &CGM, SourceLocation Loc,
       CGM.getTypes().GetFunctionType(TaskPrivatesMapFnInfo);
   auto *TaskPrivatesMap = llvm::Function::Create(
       TaskPrivatesMapTy, llvm::GlobalValue::InternalLinkage,
-      ".omp_task_privates_map.", &CGM.getModule());
+      ".omp_task_privates_map.", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, TaskPrivatesMap,
                                     TaskPrivatesMapFnInfo);
   TaskPrivatesMap->removeFnAttr(llvm::Attribute::NoInline);
@@ -3663,7 +3668,8 @@ emitTaskDupFunction(CodeGenModule &CGM, SourceLocation Loc,
   auto *TaskDupTy = CGM.getTypes().GetFunctionType(TaskDupFnInfo);
   auto *TaskDup =
       llvm::Function::Create(TaskDupTy, llvm::GlobalValue::InternalLinkage,
-                             ".omp_task_dup.", &CGM.getModule());
+                             ".omp_task_dup.", &CGM.getModule(),
+                             CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, TaskDup, TaskDupFnInfo);
   CodeGenFunction CGF(CGM);
   CGF.disableDebugInfo();
@@ -4278,7 +4284,8 @@ llvm::Value *CGOpenMPRuntime::emitReductionFunction(
   auto &CGFI = CGM.getTypes().arrangeBuiltinFunctionDeclaration(C.VoidTy, Args);
   auto *Fn = llvm::Function::Create(
       CGM.getTypes().GetFunctionType(CGFI), llvm::GlobalValue::InternalLinkage,
-      ".omp.reduction.reduction_func", &CGM.getModule());
+      ".omp.reduction.reduction_func", &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(/*D=*/nullptr, Fn, CGFI);
   CodeGenFunction CGF(CGM);
   CGF.StartFunction(GlobalDecl(), C.VoidTy, Fn, CGFI, Args);

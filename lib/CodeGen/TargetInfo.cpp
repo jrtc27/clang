@@ -6681,6 +6681,9 @@ public:
   unsigned getStackAS() const override {
     return getDefaultAS();
   }
+  unsigned getFunctionAS() const override {
+    return getDefaultAS();
+  }
 };
 }
 

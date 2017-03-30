@@ -2280,7 +2280,8 @@ ItaniumCXXABI::getOrCreateThreadLocalWrapper(const VarDecl *VD,
   llvm::FunctionType *FnTy = CGM.getTypes().GetFunctionType(FI);
   llvm::Function *Wrapper =
       llvm::Function::Create(FnTy, getThreadLocalWrapperLinkage(VD, CGM),
-                             WrapperName.str(), &CGM.getModule());
+                             WrapperName.str(), &CGM.getModule(),
+                             CGM.getTargetCodeGenInfo().getFunctionAS());
 
   CGM.SetLLVMFunctionAttributes(nullptr, FI, Wrapper);
 
@@ -2387,7 +2388,8 @@ void ItaniumCXXABI::EmitThreadLocalInitFuncs(
       llvm::FunctionType *FnTy = llvm::FunctionType::get(CGM.VoidTy, false);
       Init = llvm::Function::Create(FnTy,
                                     llvm::GlobalVariable::ExternalWeakLinkage,
-                                    InitFnName.str(), &CGM.getModule());
+                                    InitFnName.str(), &CGM.getModule(),
+                                    CGM.getTargetCodeGenInfo().getFunctionAS());
       const CGFunctionInfo &FI = CGM.getTypes().arrangeNullaryFunction();
       CGM.SetLLVMFunctionAttributes(nullptr, FI, cast<llvm::Function>(Init));
     }

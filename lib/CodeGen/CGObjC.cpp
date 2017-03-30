@@ -3246,7 +3246,8 @@ CodeGenFunction::GenerateObjCAtomicSetterCopyHelperFunction(
   llvm::Function *Fn =
     llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
                            "__assign_helper_atomic_property_",
-                           &CGM.getModule());
+                           &CGM.getModule(),
+                           CGM.getTargetCodeGenInfo().getFunctionAS());
 
   CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
 
@@ -3326,7 +3327,8 @@ CodeGenFunction::GenerateObjCAtomicGetterCopyHelperFunction(
   
   llvm::Function *Fn =
   llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
-                         "__copy_helper_atomic_property_", &CGM.getModule());
+                         "__copy_helper_atomic_property_", &CGM.getModule(),
+                         CGM.getTargetCodeGenInfo().getFunctionAS());
   
   CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
 

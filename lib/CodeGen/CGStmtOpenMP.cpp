@@ -290,7 +290,8 @@ CodeGenFunction::GenerateOpenMPCapturedStmtFunction(const CapturedStmt &S) {
 
   llvm::Function *F = llvm::Function::Create(
       FuncLLVMTy, llvm::GlobalValue::InternalLinkage,
-      CapturedStmtInfo->getHelperName(), &CGM.getModule());
+      CapturedStmtInfo->getHelperName(), &CGM.getModule(),
+      CGM.getTargetCodeGenInfo().getFunctionAS());
   CGM.SetInternalFunctionAttributes(CD, F, FuncInfo);
   if (CD->isNothrow())
     F->addFnAttr(llvm::Attribute::NoUnwind);

@@ -21,7 +21,8 @@
 using namespace clang;
 using namespace CodeGen;
 
-static llvm::Function *GetVprintfDeclaration(llvm::Module &M) {
+static llvm::Function *GetVprintfDeclaration(CodeGenModule &CGM) {
+  llvm::Module &M = CGM.getModule();
   llvm::Type *ArgTypes[] = {llvm::Type::getInt8PtrTy(M.getContext()),
                             llvm::Type::getInt8PtrTy(M.getContext())};
   llvm::FunctionType *VprintfFuncType = llvm::FunctionType::get(
@@ -38,7 +39,8 @@ static llvm::Function *GetVprintfDeclaration(llvm::Module &M) {
   // vprintf doesn't already exist; create a declaration and insert it into the
   // module.
   return llvm::Function::Create(
-      VprintfFuncType, llvm::GlobalVariable::ExternalLinkage, "vprintf", &M);
+      VprintfFuncType, llvm::GlobalVariable::ExternalLinkage, "vprintf", &M,
+      CGM.getTargetCodeGenInfo().getFunctionAS());
 }
 
 // Transforms a call to printf into a call to the NVPTX vprintf syscall (which
@@ -116,7 +118,7 @@ CodeGenFunction::EmitNVPTXDevicePrintfCallExpr(const CallExpr *E,
   }
 
   // Invoke vprintf and return.
-  llvm::Function* VprintfFunc = GetVprintfDeclaration(CGM.getModule());
+  llvm::Function* VprintfFunc = GetVprintfDeclaration(CGM);
   return RValue::get(
       Builder.CreateCall(VprintfFunc, {Args[0].RV.getScalarVal(), BufferPtr}));
 }

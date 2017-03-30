@@ -1983,7 +1983,8 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
 
   llvm::Function *F =
       llvm::Function::Create(FTy, llvm::Function::ExternalLinkage,
-                             Entry ? StringRef() : MangledName, &getModule());
+                             Entry ? StringRef() : MangledName, &getModule(),
+                             getTargetCodeGenInfo().getFunctionAS());
 
   // If we already created a function with the same mangled name (but different
   // type) before, take its name and add it to the list of functions to be
