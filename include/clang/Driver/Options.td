@@ -1966,6 +1966,14 @@ def mabicalls : Flag<["-"], "mabicalls">, Group<m_Group>,
   HelpText<"Enable SVR4-style position-independent code (Mips only)">;
 def mno_abicalls : Flag<["-"], "mno-abicalls">, Group<m_Group>,
   HelpText<"Disable SVR4-style position-independent code (Mips only)">;
+def mmct : Flag<["-"], "mmct">, Group<m_Group>,
+  HelpText<"Enable MemCap Table (CHERI only)">;
+def mno_mct : Flag<["-"], "mno-mct">, Group<m_Group>,
+  HelpText<"Disable MemCap Table (CHERI only)">;
+def mold_cap_relocs : Flag<["-"], "mold-cap-relocs">, Group<m_Group>,
+  HelpText<"Enable old-style capability relocations (CHERI only)">;
+def mnew_cap_relocs : Flag<["-"], "mnew-cap-relocs">, Group<m_Group>,
+  HelpText<"Enable new-style capability relocations (CHERI only)">;
 def mips1 : Flag<["-"], "mips1">,
   Alias<march_EQ>, AliasArgs<["mips1"]>,
   HelpText<"Equivalent to -march=mips1">, Flags<[HelpHidden]>;

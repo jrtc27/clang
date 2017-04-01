@@ -7528,6 +7528,8 @@ protected:
   std::string ABI;
   bool IsCheri;
   int CapSize;
+  bool UseMct;
+  bool NewCapRelocs;
 
 public:
   MipsTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
@@ -7536,7 +7538,8 @@ public:
         CanUseBSDABICalls(false), FloatABI(HardFloat),
         DspRev(NoDSP), HasMSA(false), HasFP64(false),
         IsCheri(getTriple().getArch() == llvm::Triple::cheri),
-        CapSize(Cheri128 ? 128 : 256) {
+        CapSize(Cheri128 ? 128 : 256),
+        UseMct(false), NewCapRelocs(false) {
     TheCXXABI.set(TargetCXXABI::GenericMIPS);
 
     setABI((getTriple().getArch() == llvm::Triple::mips ||
@@ -7560,6 +7563,14 @@ public:
 
   bool isFP64Default() const {
     return CPU == "mips32r6" || ABI == "n32" || ABI == "n64" || ABI == "64";
+  }
+
+  bool isMctDefault() const {
+    return IsCheri && CapabilityABI;
+  }
+
+  bool isNewCapRelocsDefault() const {
+    return IsCheri && CapabilityABI;
   }
 
   bool isNan2008() const override {
@@ -7809,6 +7820,12 @@ public:
         Builder.defineMacro("__CHERI_PURE_CAPABILITY__", Twine(1));
       }
 
+      if (UseMct)
+        Builder.defineMacro("__CHERI_USE_MCT__", Twine(1));
+
+      if (!NewCapRelocs)
+        Builder.defineMacro("__CHERI_OLD_CAP_RELOCS__", Twine(1));
+
       // Macros for use with the set and get permissions builtins.
       Builder.defineMacro("__CHERI_CAP_PERMISSION_GLOBAL__", Twine(1<<0));
       Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__",
@@ -8000,6 +8017,8 @@ public:
     FloatABI = HardFloat;
     DspRev = NoDSP;
     HasFP64 = isFP64Default();
+    UseMct = isMctDefault();
+    NewCapRelocs = isNewCapRelocsDefault();
 
     for (const auto &Feature : Features) {
       if (Feature == "+single-float")
@@ -8028,6 +8047,14 @@ public:
         IsNan2008 = false;
       else if (Feature == "+noabicalls")
         IsNoABICalls = true;
+      else if (Feature == "+memcap-table")
+        UseMct = true;
+      else if (Feature == "-memcap-table")
+        UseMct = false;
+      else if (Feature == "+new-cap-relocs")
+        NewCapRelocs = true;
+      else if (Feature == "-new-cap-relocs")
+        NewCapRelocs = false;
     }
 
     setDataLayout();

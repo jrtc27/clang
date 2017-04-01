@@ -317,6 +317,12 @@ void mips::getMIPSTargetFeatures(const Driver &D, const llvm::Triple &Triple,
 
   AddTargetFeature(Args, Features, options::OPT_mno_odd_spreg,
                    options::OPT_modd_spreg, "nooddspreg");
+
+  AddTargetFeature(Args, Features, options::OPT_mmct,
+                   options::OPT_mno_mct, "memcap-table");
+
+  AddTargetFeature(Args, Features, options::OPT_mnew_cap_relocs,
+                   options::OPT_mold_cap_relocs, "new-cap-relocs");
 }
 
 mips::NanEncoding mips::getSupportedNanEncoding(StringRef &CPU) {
