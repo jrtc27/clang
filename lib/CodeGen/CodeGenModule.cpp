@@ -1923,6 +1923,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
                                        llvm::AttributeSet ExtraAttrs,
                                        ForDefinition_t IsForDefinition) {
   const Decl *D = GD.getDecl();
+  unsigned AS = getTargetCodeGenInfo().getFunctionAS();
 
   // Lookup the entry, lazily creating it if necessary.
   llvm::GlobalValue *Entry = GetGlobalValue(MangledName);
@@ -1963,8 +1964,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
     // (If function is requested for a definition, we always need to create a new
     // function, not just return a bitcast.)
     if (!IsForDefinition) {
-      // AS0 OKAY: LLVM functions are always in AS0
-      return llvm::ConstantExpr::getBitCast(Entry, Ty->getPointerTo(0));
+      return llvm::ConstantExpr::getBitCast(Entry, Ty->getPointerTo(AS));
     }
   }
 
@@ -1984,7 +1984,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
   llvm::Function *F =
       llvm::Function::Create(FTy, llvm::Function::ExternalLinkage,
                              Entry ? StringRef() : MangledName, &getModule(),
-                             getTargetCodeGenInfo().getFunctionAS());
+                             AS);
 
   // If we already created a function with the same mangled name (but different
   // type) before, take its name and add it to the list of functions to be
@@ -2006,9 +2006,8 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
       Entry->removeDeadConstantUsers();
     }
 
-    // AS0 OKAY: LLVM functions are always in AS0
     llvm::Constant *BC = llvm::ConstantExpr::getBitCast(
-        F, Entry->getType()->getElementType()->getPointerTo(0));
+        F, Entry->getType()->getElementType()->getPointerTo(AS));
 
     addGlobalValReplacement(Entry, BC);
   }
@@ -2075,7 +2074,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
     return F;
   }
 
-  llvm::Type *PTy = llvm::PointerType::getUnqual(Ty);
+  llvm::Type *PTy = llvm::PointerType::get(Ty, AS);
   return llvm::ConstantExpr::getBitCast(F, PTy);
 }
 
