@@ -86,17 +86,21 @@ capability void *cheri_tag_clear(const capability void *__cap) {
   return __IF_CAPS(__builtin_cheri_tag_clear(__cap), (void*)__cap);
 }
 
+#ifndef cheri_seal
 static inline
 capability void *cheri_seal(const capability void *__cap,
                              const capability void *__type) {
   return __IF_CAPS(__builtin_cheri_seal(__cap, __type), (void*)__cap);
 }
+#endif
 
+#ifndef cheri_unseal
 static inline
 capability void *cheri_unseal(const capability void *__cap,
                                const capability void *__type) {
   return __IF_CAPS(__builtin_cheri_unseal(__cap, __type), (void*)__cap);
 }
+#endif
 
 static inline
 void cheri_perms_check(const capability void *__cap, cheri_perms_t __perms) {
