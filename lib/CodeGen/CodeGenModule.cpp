@@ -746,11 +746,12 @@ void CodeGenModule::EmitCtorList(CtorList &Fns, const char *GlobalName) {
 
   // Ctor function type is void()*.
   llvm::FunctionType* CtorFTy = llvm::FunctionType::get(VoidTy, false);
-  llvm::Type *CtorPFTy = llvm::PointerType::getUnqual(CtorFTy);
+  unsigned CtorAS = getTargetCodeGenInfo().getFunctionAS();
+  llvm::Type *CtorPFTy = llvm::PointerType::get(CtorFTy, CtorAS);
 
   // Get the type of a ctor entry, { i32, void ()*, i8* }.
   llvm::StructType *CtorStructTy = llvm::StructType::get(
-      Int32Ty, llvm::PointerType::getUnqual(CtorFTy), VoidPtrTy, nullptr);
+      Int32Ty, CtorPFTy, VoidPtrTy, nullptr);
 
   // Construct the constructor and destructor arrays.
   ConstantInitBuilder builder(*this);
