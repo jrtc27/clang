@@ -6682,7 +6682,8 @@ public:
     return getDefaultAS();
   }
   unsigned getFunctionAS() const override {
-    return getDefaultAS();
+    const TargetInfo &Target = getABIInfo().getContext().getTargetInfo();
+    return Target.areAllFunctionsCapabilities() ? getMemoryCapabilityAS() : 0;
   }
 };
 }

@@ -1005,6 +1005,8 @@ public:
 
   bool areAllPointersCapabilities() const { return CapabilityABI; }
 
+  virtual bool areAllFunctionsCapabilities() const { return false; }
+
   enum CallingConvMethodType {
     CCMT_Unknown,
     CCMT_Member,

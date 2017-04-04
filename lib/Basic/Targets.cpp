@@ -7500,10 +7500,18 @@ class MipsTargetInfo : public TargetInfo {
     } else
       llvm_unreachable("Invalid ABI");
 
+    StringRef LayoutExtra;
+    if (CapabilityABI) {
+      if (UseMct)
+        LayoutExtra = "-A200-F200";
+      else
+        LayoutExtra = "-A200";
+    }
+
     if (BigEndian)
-      resetDataLayout(("E-" + Layout + (CapabilityABI ? "-A200-F200" : "")).str());
+      resetDataLayout(("E-" + Layout + LayoutExtra).str());
     else
-      resetDataLayout(("e-" + Layout + (CapabilityABI ? "-A200-F200" : "")).str());
+      resetDataLayout(("e-" + Layout + LayoutExtra).str());
   }
 
 
@@ -8116,6 +8124,8 @@ public:
   uint64_t getPointerRangeForMemoryCapability() const override { return 64; }
 
   bool SupportsCapabilities() const override { return IsCheri; }
+
+  bool areAllFunctionsCapabilities() const override { return CapabilityABI && UseMct; }
 
   bool hasBuiltinAtomic(uint64_t AtomicSizeInBits,
                         uint64_t AlignmentInBits) const override {
