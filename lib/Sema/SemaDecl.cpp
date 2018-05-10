@@ -8796,7 +8796,8 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
         ::new (Context) AsmLabelAttr(Attr->getLocation(), Context, Name, 0);
 
       QualType Ty =
-        Context.getIntTypeForBitwidth(/*DestWidth=*/64, /*Signed=*/true);
+        Context.getIntTypeForBitwidth(/*DestWidth=*/64, /*Signed=*/true)
+          .withConst();
 
       TypeSourceInfo *TInfo =
         Context.getTrivialTypeSourceInfo(Ty, SourceLocation());
@@ -8804,11 +8805,14 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       VarDecl *VD =
         VarDecl::Create(Context, NewFD->getDeclContext(),
                         NewFD->getTypeSpecStartLoc(), Attr->getLocation(),
-                        &AliasII, Ty, TInfo, SC_Extern)
+                        &AliasII, Ty, TInfo, SC_Extern);
+
+      S->AddDecl(VD);
+      IdResolver.AddDecl(VD);
     } else {
       Diag(Attr->getLocation(),
            diag::err_cheri_method_number_suffix_must_have_class)
-        << Attr.getName() << Attr.getRange();
+        << Attr->getName() << Attr->getRange();
       NewFD->setInvalidDecl();
     }
   }
