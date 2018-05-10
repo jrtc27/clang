@@ -8807,12 +8807,13 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
                         NewFD->getTypeSpecStartLoc(), Attr->getLocation(),
                         &AliasII, Ty, TInfo, SC_Extern);
 
+      VD->addAttr(AliasAttr);
       S->AddDecl(VD);
       IdResolver.AddDecl(VD);
     } else {
       Diag(Attr->getLocation(),
            diag::err_cheri_method_number_suffix_must_have_class)
-        << Attr->getName() << Attr->getRange();
+        << Attr->getRange();
       NewFD->setInvalidDecl();
     }
   }
