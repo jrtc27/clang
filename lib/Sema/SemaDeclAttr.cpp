@@ -2203,6 +2203,16 @@ static void handleCHERIMethodSuffix(Sema &S, Decl *D, const AttributeList &Attr)
                                    Attr.getAttributeSpellingListIndex()));
 }
 
+static void handleCHERIMethodNumberSuffix(Sema &S, Decl *D, const AttributeList &Attr) {
+  StringRef Str;
+  SourceLocation LiteralLoc;
+  if (!S.checkStringLiteralArgumentAttr(Attr, 0, Str, &LiteralLoc))
+    return;
+  D->addAttr(::new (S.Context)
+             CHERIMethodNumberSuffixAttr(Attr.getRange(), S.Context, Str,
+                                         Attr.getAttributeSpellingListIndex()));
+}
+
 static void handleConstructorAttr(Sema &S, Decl *D, const AttributeList &AL) {
   uint32_t priority = ConstructorAttr::DefaultPriority;
   if (AL.getNumArgs() &&
@@ -6488,6 +6498,9 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     break;
   case AttributeList::AT_CHERIMethodSuffix:
     handleCHERIMethodSuffix(S, D, AL);
+    break;
+  case AttributeList::AT_CHERIMethodNumberSuffix:
+    handleCHERIMethodNumberSuffix(S, D, AL);
     break;
   case AttributeList::AT_PointerInterpretationCaps:
     handleSimpleAttribute<PointerInterpretationCapsAttr>(S, D, AL);

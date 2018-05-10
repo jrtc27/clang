@@ -8784,6 +8784,35 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     IdResolver.AddDecl(WrappedFD);
   }
 
+  if (CHERIMethodNumberSuffixAttr *Attr =
+          NewFD->getAttr<CHERIMethodNumberSuffixAttr>()) {
+    if (CHERIMethodClassAttr *ClsAttr = NewFD->getAttr<CHERIMethodClassAttr>()) {
+      StringRef Fn = NewFD->getName();
+      StringRef Cls = ClsAttr->getDefaultClass()->getName();
+      std::string AliasName = (Fn + Attr->getSuffix()).str();
+      IdentifierInfo &AliasII = Context.Idents.get(AliasName);
+      std::string Name = (StringRef("__cheri_method.") + Cls + "." + Fn).str();
+      AsmLabelAttr *AliasAttr =
+        ::new (Context) AsmLabelAttr(Attr->getLocation(), Context, Name, 0);
+
+      QualType Ty =
+        Context.getIntTypeForBitwidth(/*DestWidth=*/64, /*Signed=*/true);
+
+      TypeSourceInfo *TInfo =
+        Context.getTrivialTypeSourceInfo(Ty, SourceLocation());
+
+      VarDecl *VD =
+        VarDecl::Create(Context, NewFD->getDeclContext(),
+                        NewFD->getTypeSpecStartLoc(), Attr->getLocation(),
+                        &AliasII, Ty, TInfo, SC_Extern)
+    } else {
+      Diag(Attr->getLocation(),
+           diag::err_cheri_method_number_suffix_must_have_class)
+        << Attr.getName() << Attr.getRange();
+      NewFD->setInvalidDecl();
+    }
+  }
+
   if (getLangOpts().OpenCL) {
     // OpenCL v1.1 s6.5: Using an address space qualifier in a function return
     // type declaration will generate a compilation error.

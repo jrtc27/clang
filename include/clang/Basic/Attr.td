@@ -1718,6 +1718,11 @@ def CHERIMethodClass : InheritableAttr {
   let Documentation = [Undocumented];
   let Args = [IdentifierArgument<"DefaultClass">];
 }
+def CHERIMethodNumberSuffix : InheritableAttr {
+  let Spellings = [GNU<"cheri_method_number_suffix">];
+  let Documentation = [Undocumented];
+  let Args = [StringArgument<"Suffix">];
+}
 
 def IntelOclBicc : InheritableAttr {
   let Spellings = [Clang<"intel_ocl_bicc">];
