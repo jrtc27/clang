@@ -2422,7 +2422,7 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
           auto DescName = (StringRef(".sandbox_provided_callback.") +
               VD->getName()).str();
           auto Desc = CGM.getModule().getOrInsertGlobal(DescName, DescTy);
-          Val = llvm::ConstantExpr::getBitCast(Desc, RT);
+          Val = llvm::ConstantExpr::getBitCast(Desc, Val->getType());
         }
       }
 
