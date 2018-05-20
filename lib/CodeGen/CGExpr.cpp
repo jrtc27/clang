@@ -2419,9 +2419,9 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
           auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
               getTypes().ConvertType(NumTy));
           auto DescPtrTy = DescTy->getPointerTo(0);
-          auto Desc = CGM.getModule().getOrInsertGlobal(DescName, DescTy);
           auto DescName = (StringRef(".sandbox_provided_callback.") +
               VD->getName()).str();
+          auto Desc = CGM.getModule().getOrInsertGlobal(DescName, DescTy);
           Val = llvm::ConstantExpr::getBitCast(Desc, RT);
         }
       }
