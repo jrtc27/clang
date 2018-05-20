@@ -4727,7 +4727,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     CallCHERIInvoke = true;
     SmallVector<QualType, 16> NewParams;
     // Cast to descriptor pointer
-    unsigned CapAlign = Context.getTargetInfo().getCHERICapabilityAlign();
+    unsigned CapAlign = getContext().getTargetInfo().getCHERICapabilityAlign();
     auto ObjTy = getContext().getCHERIClassType();
     auto NumTy = getContext().UnsignedLongLongTy;
     auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
