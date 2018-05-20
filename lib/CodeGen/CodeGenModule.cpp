@@ -5165,8 +5165,7 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
     auto *MetadataGV = new llvm::GlobalVariable(getModule(), StructTy,
         /*isConstant*/false, Fn->getLinkage(), StructInit,
         GlobalStructName);
-    MetadataGV->setSection("__cheri_sandbox_provided_methods");
-    MetadataGV->setComdat(getModule().getOrInsertComdat(StringRef(GlobalStructName)));
+    MetadataGV->setSection("__cheri_sandbox_provided_callbacks");
     addUsedGlobal(MetadataGV);
   }
 
