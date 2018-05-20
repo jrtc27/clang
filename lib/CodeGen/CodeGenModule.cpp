@@ -5146,14 +5146,14 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
 
     auto *ObjInit = llvm::ConstantStruct::get(ObjTy, {NullCap, NullCap});
     auto *StructInit = llvm::ConstantStruct::get(StructTy, {ObjInit, Zero64});
-    if (!CallbackPtr) {
+    if (!CallbackPtrVar) {
       CallbackPtrVar = new llvm::GlobalVariable(getModule(), StructTy,
           /*isConstant*/false, Fn->getLinkage(), StructInit,
           GlobalName);
     } else {
-      CallbackPtr->setConstant(false);
-      CallbackPtr->setLinkage(Fn->getLinkage());
-      CallbackPtr->setInitializer(StructInit);
+      CallbackPtrVar->setConstant(false);
+      CallbackPtrVar->setLinkage(Fn->getLinkage());
+      CallbackPtrVar->setInitializer(StructInit);
     }
     CallbackPtrVar->setSection(".CHERI_CALLBACK");
     addUsedGlobal(CallbackPtrVar);
