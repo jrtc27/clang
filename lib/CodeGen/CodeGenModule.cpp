@@ -5118,6 +5118,34 @@ void CodeGenModule::EmitSandboxDefinedMethod(StringRef Cls, StringRef
 
 }
 
+void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Function *Fn) {
+  // For each defined callback, we emit a structure of the following form:
+  // struct sandbox_provided_callback {
+  //   struct cheri_object obj;
+  //   int64_t             method_number;
+  // };
+
+  auto GlobalStructName = (StringRef(".sandbox_provided_callback.") +
+      Method).str();
+  if (!getModule().getNamedGlobal(GlobalStructName)) {
+    auto *CapTy = VoidTy->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
+    auto *ObjTy = getTypes().ConvertType(getContext().getCHERIClassType());
+    auto *StructTy = llvm::StructType::get(ObjTy, Int64Ty);
+
+    auto *Zero64 = llvm::ConstantInt::get(Int64Ty, 0);
+    auto *NullCap = llvm::Constant::getNullValue(CapTy);
+
+    auto *ObjInit = llvm::ConstantStruct::get(ObjTy, {NullCap, NullCap});
+    auto *StructInit = llvm::ConstantStruct::get(StructTy, {ObjInit, Zero64});
+    auto *MetadataGV = new llvm::GlobalVariable(getModule(), StructTy,
+        /*isConstant*/false, Fn->getLinkage(), StructInit,
+        GlobalStructName);
+    MetadataGV->setSection("__cheri_sandbox_provided_callbacks");
+    addUsedGlobal(MetadataGV);
+  }
+
+}
+
 // Fills in the supplied string map with the set of target features for the
 // passed in function.
 void CodeGenModule::getFunctionFeatureMap(llvm::StringMap<bool> &FeatureMap,

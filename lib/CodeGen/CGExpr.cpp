@@ -2407,9 +2407,27 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
                                             *VD->evaluateValue(),
                                             VD->getType());
 
+      const ReferenceType *RT = cast<ReferenceType>(VD->getType().getTypePtr());
+
+      // Pointers to CHERI CCallback functions actually point to the descriptor
+      if (RT->getPointeeType()->isFunctionType() {
+        auto *FT =
+          dyn_cast<FunctionType>(VD->getType().getDesugaredType(getContext()));
+        if (FT && (FT->getCallConv() == CC_CHERICCallback)) {
+          auto ObjTy = getContext().getCHERIClassType();
+          auto NumTy = getContext().UnsignedLongLongTy;
+          auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
+              getTypes().ConvertType(NumTy));
+          auto DescPtrTy = DescTy->getPointerTo(0);
+          auto Desc = CGM.getModule().getOrInsertGlobal(DescName, DescTy);
+          auto DescName = (StringRef(".sandbox_provided_callback.") +
+              VD->getName()).str();
+          Val = llvm::ConstantExpr::getBitCast(Desc, RT);
+        }
+      }
+
       // If this is a CHERI reference to a function then convert the function
       // address to a capability
-      const ReferenceType *RT = cast<ReferenceType>(VD->getType().getTypePtr());
       llvm::Value* Result = Val; // use llvm::Value for
                                  // CodeGenFunction::FunctionAddressToCapability
       if (RT->isCHERICapability() && RT->getPointeeType()->isFunctionType()) {
