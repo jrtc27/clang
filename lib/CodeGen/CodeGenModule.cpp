@@ -5125,7 +5125,7 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
   //   int64_t             method_number;
   // };
 
-  auto GlobalStructName = (StringRef(".sandbox_provided_callback.") + Fn).str();
+  auto GlobalStructName = (StringRef(".sandbox_provided_callback.") + Callback).str();
   if (!getModule().getNamedGlobal(GlobalStructName)) {
     auto *CapTy = VoidTy->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
     auto *ObjTy = cast<llvm::StructType>(getTypes().ConvertType(getContext().getCHERIClassType()));
