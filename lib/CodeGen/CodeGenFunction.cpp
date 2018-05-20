@@ -912,11 +912,12 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
       dyn_cast<FunctionType>(FD->getType().getDesugaredType(getContext()));
     if (FT) {
       if (FT->getCallConv() == CC_CHERICCallee)
-        if (auto *ClsAttr = FD->getAttr<CHERIMethodClassAttr>())
+        if (auto *ClsAttr = FD->getAttr<CHERIMethodClassAttr>()) {
           CGM.EmitSandboxDefinedMethod(ClsAttr->getDefaultClass()->getName(),
                                        FD->getName(), Fn);
-        else if (FT->getCallConv() == CC_CHERICCallback)
+        } else if (FT->getCallConv() == CC_CHERICCallback) {
           CGM.EmitSandboxDefinedCallback(FD->getName(), Fn);
+        }
     }
   }
   // Add no-jump-tables value.

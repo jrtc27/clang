@@ -2410,7 +2410,7 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
       const ReferenceType *RT = cast<ReferenceType>(VD->getType().getTypePtr());
 
       // Pointers to CHERI CCallback functions actually point to the descriptor
-      if (RT->getPointeeType()->isFunctionType() {
+      if (RT->getPointeeType()->isFunctionType()) {
         auto *FT =
           dyn_cast<FunctionType>(VD->getType().getDesugaredType(getContext()));
         if (FT && (FT->getCallConv() == CC_CHERICCallback)) {
