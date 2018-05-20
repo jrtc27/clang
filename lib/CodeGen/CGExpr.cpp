@@ -2348,7 +2348,7 @@ static LValue EmitFunctionDeclLValue(CodeGenFunction &CGF,
     auto NumTy = CGF.getContext().UnsignedLongLongTy;
     auto DescTy = llvm::StructType::get(CGF.getTypes().ConvertType(ObjTy),
         CGF.getTypes().ConvertType(NumTy));
-    auto DescName = (StringRef(".sandbox_provided_callback.") +
+    auto DescName = (StringRef("__cheri_callback.") +
         FD->getName()).str();
     auto Desc = CGF.CGM.getModule().getOrInsertGlobal(DescName, DescTy);
     V = llvm::ConstantExpr::getPointerBitCastOrAddrSpaceCast(Desc, V->getType());
@@ -2431,7 +2431,7 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
           auto NumTy = getContext().UnsignedLongLongTy;
           auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
               getTypes().ConvertType(NumTy));
-          auto DescName = (StringRef(".sandbox_provided_callback.") +
+          auto DescName = (StringRef("__cheri_callback.") +
               VD->getName()).str();
           auto Desc = CGM.getModule().getOrInsertGlobal(DescName, DescTy);
           Val = llvm::ConstantExpr::getBitCast(Desc, Val->getType());

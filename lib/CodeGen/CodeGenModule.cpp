@@ -5120,13 +5120,23 @@ void CodeGenModule::EmitSandboxDefinedMethod(StringRef Cls, StringRef
 
 void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Function *Fn) {
   // For each defined callback, we emit a structure of the following form:
-  // struct sandbox_provided_callback {
+  // struct sandbox_callback {
   //   struct cheri_object obj;
   //   int64_t             method_number;
   // };
+  // as well as a structore of the following form
+  // struct sandbox_provided_callback {
+  //   int64_t   flags;
+  //   char     *callback;
+  //   void     *callback_ptr;
+  // };
+  // The flags field is always zero.  The callback field gives the name of the
+  // callback.  The callback_ptr field includes the sandbox-relative address of
+  // the callback.
 
-  auto GlobalStructName = (StringRef(".sandbox_provided_callback.") + Callback).str();
-  if (!getModule().getNamedGlobal(GlobalStructName)) {
+  auto GlobalName = (StringRef("__cheri_callback.") + Callback).str();
+  auto *CallbackPtrVar = getModule().getNamedGlobal(GlobalName);
+  if (!CallbackPtrVar) {
     auto *CapTy = VoidTy->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
     auto *ObjTy = cast<llvm::StructType>(getTypes().ConvertType(getContext().getCHERIClassType()));
     auto *StructTy = llvm::StructType::get(ObjTy, Int64Ty);
@@ -5136,10 +5146,27 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
 
     auto *ObjInit = llvm::ConstantStruct::get(ObjTy, {NullCap, NullCap});
     auto *StructInit = llvm::ConstantStruct::get(StructTy, {ObjInit, Zero64});
+    CallbackPtrVar = new llvm::GlobalVariable(getModule(), StructTy,
+        /*isConstant*/false, Fn->getLinkage(), StructInit,
+        GlobalName);
+    CallbackPtrVar->setSection(".CHERI_CALLBACK");
+    addUsedGlobal(CallbackPtrVar);
+  }
+
+  auto GlobalStructName = (StringRef(".sandbox_provided_callback.") + Callback).str();
+  if (!getModule().getNamedGlobal(GlobalStructName)) {
+    auto *CallbackName = GenerateAS0StringLiteral(*this, Callback);
+    auto *StructTy = llvm::StructType::get(Int64Ty, CallbackName->getType(),
+                                           CallbackPtrVar->getType());
+    auto *Zero64 = llvm::ConstantInt::get(Int64Ty, 0);
+
+    auto *StructInit = llvm::ConstantStruct::get(StructTy, {Zero64,
+        CallbackName, CallbackPtrVar});
     auto *MetadataGV = new llvm::GlobalVariable(getModule(), StructTy,
         /*isConstant*/false, Fn->getLinkage(), StructInit,
         GlobalStructName);
-    MetadataGV->setSection("__cheri_sandbox_provided_callbacks");
+    MetadataGV->setSection("__cheri_sandbox_provided_methods");
+    MetadataGV->setComdat(getModule().getOrInsertComdat(StringRef(GlobalStructName)));
     addUsedGlobal(MetadataGV);
   }
 
