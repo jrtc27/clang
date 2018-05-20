@@ -4727,6 +4727,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     CallCHERIInvoke = true;
     SmallVector<QualType, 16> NewParams;
     // Cast to descriptor pointer
+    unsigned CapAlign = Context.getTargetInfo().getCHERICapabilityAlign();
     auto ObjTy = getContext().getCHERIClassType();
     auto NumTy = getContext().UnsignedLongLongTy;
     auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
@@ -4738,13 +4739,13 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     auto *DescP = Builder.CreatePointerCast(Callee.getFunctionPointer(), DescPtrTy);
     // Add the method number
     auto *MethodNum = Builder.CreateGEP(DescP, {0, 1});
-    MethodNum = Builder.CreateLoad(MethodNum);
+    MethodNum = Builder.CreateLoad(Address(MethodNum, CharUnits::fromQuantity(8)));
     CallArg MethodNumArg(RValue::get(MethodNum), NumTy, false);
     NewParams.push_back(NumTy);
     Args.insert(Args.begin(), MethodNumArg);
     // Add the CHERI object
     auto *Obj = Builder.CreateGEP(DescP, {0, 0});
-    Obj = Builder.CreateLoad(Obj);
+    Obj = Builder.CreateLoad(Address(Obj, CapAlign));
     CallArg ObjArg(RValue::get(Obj), ObjTy, false);
     NewParams.push_back(ObjTy);
     Args.insert(Args.begin(), ObjArg);
