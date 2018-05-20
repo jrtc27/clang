@@ -4773,7 +4773,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
 
     auto *FnPType = cast<FunctionProtoType>(FnType);
     auto Params = FnPType->getParamTypes();
-    FunctionProtoType::ExtProtoInfo EPI = FnPType->getExtProtoInfo();
+    FunctionProtoType::ExtProtoInfo EPI = FnPType->getExtProtoInfo().withCallingConv(CC_CHERICCall);
     NewParams.insert(NewParams.end(), Params.begin(), Params.end());
     FnType = getContext().getFunctionType(FnPType->getReturnType(),
         NewParams, EPI)->getAs<FunctionType>();
