@@ -4703,7 +4703,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
         getTypes().ConvertType(NumTy));
     unsigned DescAS = cast<PointerType>(CalleeType)->isCHERICapability()
                           ? CGM.getTargetCodeGenInfo().getCHERICapabilityAS()
-                          : CGM.getTargetAddressSpace(PointeeType.>getQualifiers());
+                          : CGM.getTargetAddressSpace(PointeeType.getQualifiers());
     auto DescPtrTy = DescTy->getPointerTo(DescAS);
     auto *DescP = Builder.CreatePointerCast(Callee.getFunctionPointer(), DescPtrTy);
     // Add the method number
