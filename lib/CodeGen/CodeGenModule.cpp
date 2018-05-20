@@ -5137,7 +5137,7 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
   auto GlobalName = (StringRef("__cheri_callback.") + Callback).str();
   auto *CallbackPtrVar = getModule().getNamedGlobal(GlobalName);
   if (!CallbackPtrVar || !CallbackPtrVar->hasInitializer()) {
-    auto *CapTy = VoidTy->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
+    auto *CapTy = Int8Ty->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
     auto *ObjTy = cast<llvm::StructType>(getTypes().ConvertType(getContext().getCHERIClassType()));
     auto *StructTy = llvm::StructType::get(ObjTy, Int64Ty);
 
