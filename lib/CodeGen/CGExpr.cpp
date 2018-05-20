@@ -4748,7 +4748,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     NewParams.push_back(NumTy);
     Args.insert(Args.begin(), MethodNumArg);
     // Add the CHERI object
-    auto *AObj = Address(Builder.CreateStructGEP(nullptr, DescP, 0), CharUnits::fromQuantity(CapAlign));
+    auto AObj = Address(Builder.CreateStructGEP(nullptr, DescP, 0), CharUnits::fromQuantity(CapAlign));
     Address A1 = Builder.CreateStructGEP(AObj, 0, CharUnits::Zero(), "arg1");
     Address A2 = Builder.CreateStructGEP(AObj, 1, CharUnits::Zero(), "arg2");
     CallArg Arg1(RValue::get(Builder.CreateLoad(A1)), Ty1, false);
