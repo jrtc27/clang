@@ -2308,7 +2308,8 @@ llvm::Value *CodeGenFunction::FunctionAddressToCapability(CodeGenFunction &CGF,
 }
 
 static llvm::Value *EmitFunctionDeclPointer(CodeGenFunction &CGF,
-                                               const FunctionDecl *FD) {
+                                               const FunctionDecl *FD,
+                                               bool LValue = false) {
   CodeGenModule &CGM = CGF.CGM;
   if (FD->hasAttr<WeakRefAttr>()) {
     ConstantAddress aliasee = CGM.GetWeakRefReference(FD);
@@ -2317,7 +2318,10 @@ static llvm::Value *EmitFunctionDeclPointer(CodeGenFunction &CGF,
 
   llvm::Value *V = CGM.GetAddrOfFunction(FD);
   auto &TI = CGF.getContext().getTargetInfo();
-  if (TI.areAllPointersCapabilities())
+  auto *FT =
+    dyn_cast<FunctionType>(FD->getType().getDesugaredType(CGF.getContext()));
+  if (TI.areAllPointersCapabilities() &&
+      (!LValue || !FT || (FT->getCallConv() != CC_CHERICCallback)))
     V = CodeGenFunction::FunctionAddressToCapability(CGF, V);
 
   if (!FD->hasPrototype()) {
@@ -2338,7 +2342,7 @@ static llvm::Value *EmitFunctionDeclPointer(CodeGenFunction &CGF,
 
 static LValue EmitFunctionDeclLValue(CodeGenFunction &CGF,
                                      const Expr *E, const FunctionDecl *FD) {
-  llvm::Value *V = EmitFunctionDeclPointer(CGF, FD);
+  llvm::Value *V = EmitFunctionDeclPointer(CGF, FD, true);
   CharUnits Alignment = CGF.getContext().getDeclAlign(FD);
   // Pointers to CHERI CCallback functions actually point to the descriptor
   auto *FT =
