@@ -2320,9 +2320,19 @@ static llvm::Value *EmitFunctionDeclPointer(CodeGenFunction &CGF,
   auto &TI = CGF.getContext().getTargetInfo();
   auto *FT =
     dyn_cast<FunctionType>(FD->getType().getDesugaredType(CGF.getContext()));
-  if (TI.areAllPointersCapabilities() &&
-      (!LValue || !FT || (FT->getCallConv() != CC_CHERICCallback)))
-    V = CodeGenFunction::FunctionAddressToCapability(CGF, V);
+  if (TI.areAllPointersCapabilities()) {
+    if (!LValue || !FT || (FT->getCallConv() != CC_CHERICCallback)) {
+      V = CodeGenFunction::FunctionAddressToCapability(CGF, V);
+    } else {
+      auto *VTy = cast<llvm::PointerType>(V->getType());
+      unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
+      auto *CapTy = VTy->getElementType()->getPointerTo(CapAS);
+      if (VTy->getPointerAddressSpace() == CapAS)
+        V = CGF.Builder.CreateBitCast(V, CapTy);
+      else
+        V = CGF.Builder.CreatePointerBitCastOrAddrSpaceCast(V, CapTy);
+    }
+  }
 
   if (!FD->hasPrototype()) {
     if (const FunctionProtoType *Proto =
