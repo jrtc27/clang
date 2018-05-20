@@ -414,7 +414,7 @@ public:
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (V->getType()->getPointerAddressSpace() != CapAS)
-        V = CodeGenFunction::FunctionAddressToCapability(CGF, V);
+        Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
     }
     return Builder.CreateBitCast(V, ConvertType(E->getType()));
   }
@@ -567,7 +567,17 @@ public:
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (AddrTy->getPointerAddressSpace() != CapAS) {
-        Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
+        if (cast<FunctionType>(E->getType())->getCallConv() != CC_CHERICCallback) {
+          Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
+        } else {
+          auto *VTy = cast<llvm::PointerType>(Addr->getType());
+          unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
+          auto *CapTy = VTy->getElementType()->getPointerTo(CapAS);
+          if (VTy->getPointerAddressSpace() == CapAS)
+            Addr = CGF.Builder.CreateBitCast(Addr, CapTy);
+          else
+            Addr = CGF.Builder.CreatePointerBitCastOrAddrSpaceCast(Addr, CapTy);
+        }
       }
     }
     return Addr;
@@ -1804,7 +1814,8 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     QualType SrcPointeeTy = SrcTy->getPointeeType();
     QualType DstPointeeTy = DestTy->getPointeeType();
     if (TI.SupportsCapabilities()) {
-      if (SrcPointeeTy->isFunctionType() && DstPointeeTy->isFunctionType()) {
+      if (SrcPointeeTy->isFunctionType() && DstPointeeTy->isFunctionType() &&
+          cast<FunctionType>(SrcPointeeTy)->getCallConv() != CC_CHERICCallback) {
         // FIXME: Should we handle casts in the other direction by doing a
         // pcc-relative cfromptr?
         if (Kind == CK_PointerToCHERICapability)
@@ -1895,7 +1906,17 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (AddrTy->getPointerAddressSpace() != CapAS) {
-        Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
+        if (cast<FunctionType>(E->getType())->getCallConv() != CC_CHERICCallback) {
+          Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
+        } else {
+          auto *VTy = cast<llvm::PointerType>(Addr->getType());
+          unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
+          auto *CapTy = VTy->getElementType()->getPointerTo(CapAS);
+          if (VTy->getPointerAddressSpace() == CapAS)
+            Addr = CGF.Builder.CreateBitCast(Addr, CapTy);
+          else
+            Addr = CGF.Builder.CreatePointerBitCastOrAddrSpaceCast(Addr, CapTy);
+        }
       }
     }
     return Addr;
