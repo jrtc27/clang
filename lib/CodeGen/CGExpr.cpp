@@ -2340,6 +2340,19 @@ static LValue EmitFunctionDeclLValue(CodeGenFunction &CGF,
                                      const Expr *E, const FunctionDecl *FD) {
   llvm::Value *V = EmitFunctionDeclPointer(CGF, FD);
   CharUnits Alignment = CGF.getContext().getDeclAlign(FD);
+  // Pointers to CHERI CCallback functions actually point to the descriptor
+  auto *FT =
+    dyn_cast<FunctionType>(FD->getType().getDesugaredType(CGF.getContext()));
+  if (FT && (FT->getCallConv() == CC_CHERICCallback)) {
+    auto ObjTy = CGF.getContext().getCHERIClassType();
+    auto NumTy = CGF.getContext().UnsignedLongLongTy;
+    auto DescTy = llvm::StructType::get(CGF.getTypes().ConvertType(ObjTy),
+        CGF.getTypes().ConvertType(NumTy));
+    auto DescName = (StringRef(".sandbox_provided_callback.") +
+        FD->getName()).str();
+    auto Desc = CGF.CGM.getModule().getOrInsertGlobal(DescName, DescTy);
+    V = llvm::ConstantExpr::getPointerBitCastOrAddrSpaceCast(Desc, V->getType());
+  }
   return CGF.MakeAddrLValue(V, E->getType(), Alignment,
                             AlignmentSource::Decl);
 }
