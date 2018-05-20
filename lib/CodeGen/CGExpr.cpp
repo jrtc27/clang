@@ -4738,13 +4738,13 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     auto DescPtrTy = DescTy->getPointerTo(DescAS);
     auto *DescP = Builder.CreatePointerCast(Callee.getFunctionPointer(), DescPtrTy);
     // Add the method number
-    auto *MethodNum = Builder.CreateGEP(DescP, {0, 1});
+    auto *MethodNum = Builder.CreateConstGEP2_32(DescP, 0, 1);
     MethodNum = Builder.CreateLoad(Address(MethodNum, CharUnits::fromQuantity(8)));
     CallArg MethodNumArg(RValue::get(MethodNum), NumTy, false);
     NewParams.push_back(NumTy);
     Args.insert(Args.begin(), MethodNumArg);
     // Add the CHERI object
-    auto *Obj = Builder.CreateGEP(DescP, {0, 0});
+    auto *Obj = Builder.CreateConstGEP2_32(DescP, 0, 0);
     Obj = Builder.CreateLoad(Address(Obj, CharUnits::fromQuantity(CapAlign)));
     CallArg ObjArg(RValue::get(Obj), ObjTy, false);
     NewParams.push_back(ObjTy);
