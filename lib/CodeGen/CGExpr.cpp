@@ -4688,7 +4688,7 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
                E->getDirectCallee(), /*ParamsToSkip*/ 0, Order);
 
   bool CallCHERIInvoke = false;
-  // For CHERI callbacks, the function 'pointer' is actually a struct
+  // For CHERI callbacks, the function 'pointer' target is actually a struct
   // containing all of the information required for a cross domain call.
   // Note: It doesn't actually matter what the order of the number and class
   // are, as they will be in a different category of register.  This is *not*
@@ -4696,15 +4696,19 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
   if (FnType->getCallConv() == CC_CHERICCallback) {
     CallCHERIInvoke = true;
     SmallVector<QualType, 16> NewParams;
-    // Add the method number
-    auto *MethodNum = Builder.CreateExtractValue(Callee.getFunctionPointer(), {1});
+    // Cast to descriptor pointer
+    auto ObjTy = getContext().getCHERIClassType();
     auto NumTy = getContext().UnsignedLongLongTy;
+    auto DescTy = llvm::StructType::get(ObjTy, NumTy);
+    auto DescPTy = DescTy->getPointerTo(CalleeType->getPointerAddressSpace());
+    auto *DescP = Builder.CreatePointerCast(Callee.getFunctionPointer(), DescPTy);
+    // Add the method number
+    auto *MethodNum = Builder.CreateExtractValue(DescP, {0, 1});
     CallArg MethodNumArg(RValue::get(MethodNum), NumTy, false);
     NewParams.push_back(NumTy);
     Args.insert(Args.begin(), MethodNumArg);
     // Add the CHERI object
-    auto *Obj = Builder.CreateExtractValue(Callee.getFunctionPointer(), {0});
-    auto ObjTy = getContext().getCHERIClassType();
+    auto *Obj = Builder.CreateExtractValue(DescP, {0, 0});
     CallArg ObjArg(RValue::get(Obj), ObjTy, false);
     NewParams.push_back(ObjTy);
     Args.insert(Args.begin(), ObjArg);

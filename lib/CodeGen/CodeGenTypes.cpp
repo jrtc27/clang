@@ -531,15 +531,17 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
     QualType ETy = PTy->getPointeeType();
     // CHERI CCallback function pointers are not actually pointers, they are
     // structs containing three pointers.
-    if (ETy->isFunctionProtoType()) {
-      auto FPT = ETy->getAs<FunctionProtoType>();
-      if (FPT->getCallConv() == CC_CHERICCallback) {
-        auto MethNoTy = llvm::Type::getInt64Ty(getLLVMContext());
-        auto ObjTy = ConvertType(Context.getCHERIClassType());
-        ResultType = llvm::StructType::get(ObjTy, MethNoTy);
-        break;
-      }
-    }
+    // XXXJC: Disable this; they are now pointers to descriptors, which can be
+    // ignored until later.
+    //if (ETy->isFunctionProtoType()) {
+    //  auto FPT = ETy->getAs<FunctionProtoType>();
+    //  if (FPT->getCallConv() == CC_CHERICCallback) {
+    //    auto MethNoTy = llvm::Type::getInt64Ty(getLLVMContext());
+    //    auto ObjTy = ConvertType(Context.getCHERIClassType());
+    //    ResultType = llvm::StructType::get(ObjTy, MethNoTy);
+    //    break;
+    //  }
+    //}
     llvm::Type *PointeeType = ConvertTypeForMem(ETy);
     if (PointeeType->isVoidTy())
       PointeeType = llvm::Type::getInt8Ty(getLLVMContext());
