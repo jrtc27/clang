@@ -5136,7 +5136,7 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
 
   auto GlobalName = (StringRef("__cheri_callback.") + Callback).str();
   auto *CallbackPtrVar = getModule().getNamedGlobal(GlobalName);
-  if (!CallbackPtrVar) {
+  if (!CallbackPtrVar || !CallbackPtrVar->hasInitializer()) {
     auto *CapTy = VoidTy->getPointerTo(getTargetCodeGenInfo().getCHERICapabilityAS());
     auto *ObjTy = cast<llvm::StructType>(getTypes().ConvertType(getContext().getCHERIClassType()));
     auto *StructTy = llvm::StructType::get(ObjTy, Int64Ty);
@@ -5146,9 +5146,15 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
 
     auto *ObjInit = llvm::ConstantStruct::get(ObjTy, {NullCap, NullCap});
     auto *StructInit = llvm::ConstantStruct::get(StructTy, {ObjInit, Zero64});
-    CallbackPtrVar = new llvm::GlobalVariable(getModule(), StructTy,
-        /*isConstant*/false, Fn->getLinkage(), StructInit,
-        GlobalName);
+    if (!CallbackPtr) {
+      CallbackPtrVar = new llvm::GlobalVariable(getModule(), StructTy,
+          /*isConstant*/false, Fn->getLinkage(), StructInit,
+          GlobalName);
+    } else {
+      CallbackPtr->setConstant(false);
+      CallbackPtr->setLinkage(Fn->getLinkage());
+      CallbackPtr->setInitializer(StructInit);
+    }
     CallbackPtrVar->setSection(".CHERI_CALLBACK");
     addUsedGlobal(CallbackPtrVar);
   }
