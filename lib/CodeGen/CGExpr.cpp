@@ -4729,6 +4729,8 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     // Cast to descriptor pointer
     unsigned CapAlign = getContext().getTargetInfo().getCHERICapabilityAlign();
     auto ObjTy = getContext().getCHERIClassType();
+    QualType Ty1 = FieldsIt->getType();
+    QualType Ty2 = (++FieldsIt)->getType();
     auto NumTy = getContext().UnsignedLongLongTy;
     auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy),
         getTypes().ConvertType(NumTy));
@@ -4744,11 +4746,14 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     NewParams.push_back(NumTy);
     Args.insert(Args.begin(), MethodNumArg);
     // Add the CHERI object
-    auto *Obj = Builder.CreateStructGEP(nullptr, DescP, 0);
-    Obj = Builder.CreateLoad(Address(Obj, CharUnits::fromQuantity(CapAlign)));
-    CallArg ObjArg(RValue::get(Obj), ObjTy, false);
+    auto *AObj = Address(Builder.CreateStructGEP(nullptr, DescP, 0), CharUnits::fromQuantity(CapAlign));
+    Address A1 = Builder.CreateStructGEP(AObj, 0, CharUnits::Zero(), "arg1");
+    Address A2 = Builder.CreateStructGEP(AObj, 1, CharUnits::Zero(), "arg2");
+    CallArg Arg1(RValue::get(Builder.CreateLoad(A1)), Ty1, false);
+    CallArg Arg2(RValue::get(Builder.CreateLoad(A2)), Ty2, false);
+    Args.insert(Args.begin(), Arg2);
+    Args.insert(Args.begin(), Arg1);
     NewParams.push_back(ObjTy);
-    Args.insert(Args.begin(), ObjArg);
 
     auto *FnPType = cast<FunctionProtoType>(FnType);
     auto Params = FnPType->getParamTypes();
