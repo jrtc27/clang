@@ -4729,6 +4729,8 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     // Cast to descriptor pointer
     unsigned CapAlign = getContext().getTargetInfo().getCHERICapabilityAlign();
     auto ObjTy = getContext().getCHERIClassType();
+    auto Fields = ObjTy->getAs<RecordType>()->getDecl()->fields();
+    auto FieldsIt = Fields.begin();
     QualType Ty1 = FieldsIt->getType();
     QualType Ty2 = (++FieldsIt)->getType();
     auto NumTy = getContext().UnsignedLongLongTy;
