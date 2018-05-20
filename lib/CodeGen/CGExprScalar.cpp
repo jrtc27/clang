@@ -567,7 +567,7 @@ public:
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (AddrTy->getPointerAddressSpace() != CapAS) {
-        if (cast<FunctionType>(E->getSubExpr()->getType())->getCallConv() != CC_CHERICCallback) {
+        if (cast<FunctionType>(E->getSubExpr()->getType().getTypePtr())->getCallConv() != CC_CHERICCallback) {
           Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
         } else {
           auto *VTy = cast<llvm::PointerType>(Addr->getType());
@@ -1815,7 +1815,7 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     QualType DstPointeeTy = DestTy->getPointeeType();
     if (TI.SupportsCapabilities()) {
       if (SrcPointeeTy->isFunctionType() && DstPointeeTy->isFunctionType() &&
-          cast<FunctionType>(SrcPointeeTy)->getCallConv() != CC_CHERICCallback) {
+          cast<FunctionType>(SrcPointeeTy.getTypePtr())->getCallConv() != CC_CHERICCallback) {
         // FIXME: Should we handle casts in the other direction by doing a
         // pcc-relative cfromptr?
         if (Kind == CK_PointerToCHERICapability)
@@ -1906,7 +1906,7 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (AddrTy->getPointerAddressSpace() != CapAS) {
-        if (cast<FunctionType>(E->getType())->getCallConv() != CC_CHERICCallback) {
+        if (cast<FunctionType>(E->getType().getTypePtr())->getCallConv() != CC_CHERICCallback) {
           Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
         } else {
           auto *VTy = cast<llvm::PointerType>(Addr->getType());
