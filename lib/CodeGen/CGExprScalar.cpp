@@ -414,7 +414,7 @@ public:
     if (TI.areAllPointersCapabilities()) {
       unsigned CapAS = CGF.CGM.getTargetCodeGenInfo().getCHERICapabilityAS();
       if (V->getType()->getPointerAddressSpace() != CapAS)
-        Addr = CodeGenFunction::FunctionAddressToCapability(CGF, Addr);
+        V = CodeGenFunction::FunctionAddressToCapability(CGF, V);
     }
     return Builder.CreateBitCast(V, ConvertType(E->getType()));
   }
