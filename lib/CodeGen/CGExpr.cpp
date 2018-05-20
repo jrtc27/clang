@@ -4699,10 +4699,10 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, const CGCallee &OrigCallee
     // Cast to descriptor pointer
     auto ObjTy = getContext().getCHERIClassType();
     auto NumTy = getContext().UnsignedLongLongTy;
-    auto DescTy = llvm::StructType::get(getTypes().convertType(ObjTy), NumTy);
-    unsigned DescAS = CalleeType->isCHERICapability()
+    auto DescTy = llvm::StructType::get(getTypes().ConvertType(ObjTy), NumTy);
+    unsigned DescAS = cast<PointerType>(CalleeType)->isCHERICapability()
                           ? CGM.getTargetCodeGenInfo().getCHERICapabilityAS()
-                          : CGM.getTargetAddressSpace(CalleeType->getQualifiers());
+                          : CGM.getTargetAddressSpace(PointeeType.>getQualifiers());
     auto DescPtrTy = DescTy->getPointerTo(DescAS);
     auto *DescP = Builder.CreatePointerCast(Callee.getFunctionPointer(), DescPtrTy);
     // Add the method number
