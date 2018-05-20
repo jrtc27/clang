@@ -46,10 +46,10 @@ using namespace CodeGen;
 unsigned CodeGenTypes::ClangCallConvToLLVMCallConv(CallingConv CC) {
   switch (CC) {
   default: return llvm::CallingConv::C;
-  case CC_CHERICCall:
+  case CC_CHERICCall: return llvm::CallingConv::CHERI_CCall;
+  case CC_CHERICCallee:
   case CC_CHERICCallback:
-    return llvm::CallingConv::CHERI_CCall;
-  case CC_CHERICCallee: return llvm::CallingConv::CHERI_CCallee;
+    return llvm::CallingConv::CHERI_CCallee;
   case CC_X86StdCall: return llvm::CallingConv::X86_StdCall;
   case CC_X86FastCall: return llvm::CallingConv::X86_FastCall;
   case CC_X86RegCall: return llvm::CallingConv::X86_RegCall;
