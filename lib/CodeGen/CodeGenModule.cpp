@@ -5129,10 +5129,12 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
   //   int64_t   flags;
   //   char     *callback;
   //   void     *callback_ptr;
+  //   void     *callback_fn_ptr;
   // };
   // The flags field is always zero.  The callback field gives the name of the
   // callback.  The callback_ptr field includes the sandbox-relative address of
-  // the callback.
+  // the callback struct. The callback_fn_ptr field includes the
+  // sandbox-relative address of the callback entry point.
 
   auto GlobalName = (StringRef("__cheri_callback.") + Callback).str();
   auto *CallbackPtrVar = getModule().getNamedGlobal(GlobalName);
@@ -5163,11 +5165,12 @@ void CodeGenModule::EmitSandboxDefinedCallback(StringRef Callback, llvm::Functio
   if (!getModule().getNamedGlobal(GlobalStructName)) {
     auto *CallbackName = GenerateAS0StringLiteral(*this, Callback);
     auto *StructTy = llvm::StructType::get(Int64Ty, CallbackName->getType(),
-                                           CallbackPtrVar->getType());
+                                           CallbackPtrVar->getType(),
+                                           Fn->getType());
     auto *Zero64 = llvm::ConstantInt::get(Int64Ty, 0);
 
     auto *StructInit = llvm::ConstantStruct::get(StructTy, {Zero64,
-        CallbackName, CallbackPtrVar});
+        CallbackName, CallbackPtrVar, Fn});
     auto *MetadataGV = new llvm::GlobalVariable(getModule(), StructTy,
         /*isConstant*/false, Fn->getLinkage(), StructInit,
         GlobalStructName);
