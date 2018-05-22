@@ -2746,7 +2746,7 @@ StringRef FunctionType::getNameForCallConv(CallingConv CC) {
   case CC_C: return "cdecl";
   case CC_CHERICCall: return "cheri_ccall";
   case CC_CHERICCallee: return "cheri_ccallee";
-  case CC_CHERICCallback: return "attr_cheri_ccallback";
+  case CC_CHERICCallback: return "cheri_ccallback";
   case CC_X86StdCall: return "stdcall";
   case CC_X86FastCall: return "fastcall";
   case CC_X86ThisCall: return "thiscall";
