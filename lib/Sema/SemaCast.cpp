@@ -1799,22 +1799,6 @@ void Sema::CheckCompatibleReinterpretCast(QualType SrcType, QualType DestType,
   Diag(Range.getBegin(), DiagID) << SrcType << DestType << Range;
 }
 
-static void DiagnoseCHERICallback(Sema &Self, SourceLocation Loc,
-                                  QualType SrcType, QualType DestType) {
-  bool SrcIsCallback = false;
-  bool DestIsCallback = false;
-  if (auto SrcPointer = dyn_cast<PointerType>(SrcType))
-    if (auto SrcFnPTy = SrcPointer->getPointeeType()->getAs<FunctionType>())
-      if (SrcFnPTy->getCallConv() == CC_CHERICCallback)
-        SrcIsCallback = true;
-  if (auto DestPointer = dyn_cast<PointerType>(DestType))
-    if (auto DestFnPTy = DestPointer->getPointeeType()->getAs<FunctionType>())
-      if (DestFnPTy->getCallConv() == CC_CHERICCallback)
-        DestIsCallback = true;
-  if (SrcIsCallback != DestIsCallback)
-    Self.Diag(Loc, diag::err_cheri_invalid_callback_cast);
-}
-
 static void DiagnoseCHERIPtr(Sema &Self, Expr *SrcExpr, QualType DestType,
                               CastKind &Kind, SourceRange &Range) {
   if (Kind != CK_BitCast)
@@ -2785,7 +2769,6 @@ void CastOperation::CheckCStyleCast() {
       return;
     }
   }
-  DiagnoseCHERICallback(Self, SrcExpr.get()->getLocStart(), SrcType, DestType);
   DiagnoseCastOfObjCSEL(Self, SrcExpr, DestType);
   DiagnoseCallingConvCast(Self, SrcExpr, DestType, OpRange);
   DiagnoseBadFunctionCast(Self, SrcExpr, DestType);

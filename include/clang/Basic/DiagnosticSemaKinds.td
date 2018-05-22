@@ -1017,8 +1017,6 @@ def err_cheri_method_class_must_have_correct_type: Error<
   "the argument to attribute '%0' must be a CHERI class">;
 def err_cheri_method_number_suffix_must_have_class: Error<
   "attribute 'cheri_method_number_suffix' requires a 'cheri_class' attribute to also be present">;
-def err_cheri_invalid_callback_cast: Error<
-  "CHERI callback function pointers may only be cast to other CHERI callback types">;
 def warn_mips_cheri_call_no_func_proto: Warning<
   "call to function '%0' with no prototype may lead to run-time stack corruption on CHERI">,
   InGroup<MIPSCHERIPrototypes>, DefaultIgnore;
