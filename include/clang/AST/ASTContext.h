@@ -2886,6 +2886,9 @@ private:
   void ReleaseDeclContextMaps();
   void ReleaseParentMapEntries();
 
+  using RequiredMethodsList =
+      llvm::SmallVector<std::pair<StringRef, StringRef>, 16>;
+
 public:
   enum PragmaSectionFlag : unsigned {
     PSF_None = 0,
@@ -2910,6 +2913,7 @@ public:
   };
 
   llvm::StringMap<SectionInfo> SectionInfos;
+  RequiredMethodsList ExtraRequiredMethods;
 };
 
 /// \brief Utility function for constructing a nullary selector.

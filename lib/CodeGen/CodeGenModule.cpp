@@ -385,6 +385,7 @@ void CodeGenModule::clear() {
   DeferredDeclsToEmit.clear();
   if (OpenMPRuntime)
     OpenMPRuntime->clear();
+  Context.ExtraRequiredMethods.clear();
 }
 
 void InstrProfStats::reportDiagnostics(DiagnosticsEngine &Diags,
@@ -1658,6 +1659,10 @@ void CodeGenModule::EmitModuleLinkOptions() {
 }
 
 void CodeGenModule::EmitDeferred() {
+  for (auto Pair : Context.ExtraRequiredMethods)
+    EmitSandboxRequiredMethod(Pair.First, Pair.Second);
+  Context.ExtraRequiredMethods.clear();
+
   // Emit code for any potentially referenced deferred decls.  Since a
   // previously unused static decl may become used during the generation of code
   // for a static function, iterate until no changes are made.
@@ -5040,7 +5045,7 @@ llvm::Value *CodeGenModule::EmitSandboxRequiredMethod(StringRef Cls,
 
   auto *MethodNumVar = getModule().getNamedGlobal(GlobalName);
   auto *Zero64 = llvm::ConstantInt::get(Int64Ty, 0);
-  if (!MethodNumVar) {
+  if (!MethodNumVar || !MethodNumVar->hasInitializer()) {
     MethodNumVar = new llvm::GlobalVariable(getModule(), Int64Ty,
         /*isConstant*/false, llvm::GlobalValue::LinkOnceODRLinkage,
         Zero64, GlobalName);

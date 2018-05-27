@@ -8810,6 +8810,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       VD->addAttr(AliasAttr);
       S->AddDecl(VD);
       IdResolver.AddDecl(VD);
+      Context.ExtraRequiredMethods.push_back({Cls, Fn});
     } else {
       Diag(Attr->getLocation(),
            diag::err_cheri_method_number_suffix_must_have_class)
