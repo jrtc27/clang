@@ -1660,7 +1660,7 @@ void CodeGenModule::EmitModuleLinkOptions() {
 
 void CodeGenModule::EmitDeferred() {
   for (auto Pair : Context.ExtraRequiredMethods)
-    EmitSandboxRequiredMethod(Pair.First, Pair.Second);
+    EmitSandboxRequiredMethod(Pair.first, Pair.second);
   Context.ExtraRequiredMethods.clear();
 
   // Emit code for any potentially referenced deferred decls.  Since a
