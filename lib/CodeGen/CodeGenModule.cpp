@@ -5046,9 +5046,15 @@ llvm::Value *CodeGenModule::EmitSandboxRequiredMethod(StringRef Cls,
   auto *MethodNumVar = getModule().getNamedGlobal(GlobalName);
   auto *Zero64 = llvm::ConstantInt::get(Int64Ty, 0);
   if (!MethodNumVar || !MethodNumVar->hasInitializer()) {
-    MethodNumVar = new llvm::GlobalVariable(getModule(), Int64Ty,
-        /*isConstant*/false, llvm::GlobalValue::LinkOnceODRLinkage,
-        Zero64, GlobalName);
+    if (!MethodNumVar) {
+      MethodNumVar = new llvm::GlobalVariable(getModule(), Int64Ty,
+          /*isConstant*/false, llvm::GlobalValue::LinkOnceODRLinkage,
+          Zero64, GlobalName);
+    } else {
+      MethodNumVar.setConstant(false);
+      MethodNumVar.setLinkage(llvm::GlobalValue::LinkOnceODRLinkage);
+      MethodNumVar.setInitializer(Zero64);
+    }
     MethodNumVar->setSection(".CHERI_CALLER");
     addUsedGlobal(MethodNumVar);
   }
