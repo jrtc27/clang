@@ -5051,9 +5051,9 @@ llvm::Value *CodeGenModule::EmitSandboxRequiredMethod(StringRef Cls,
           /*isConstant*/false, llvm::GlobalValue::LinkOnceODRLinkage,
           Zero64, GlobalName);
     } else {
-      MethodNumVar.setConstant(false);
-      MethodNumVar.setLinkage(llvm::GlobalValue::LinkOnceODRLinkage);
-      MethodNumVar.setInitializer(Zero64);
+      MethodNumVar->setConstant(false);
+      MethodNumVar->setLinkage(llvm::GlobalValue::LinkOnceODRLinkage);
+      MethodNumVar->setInitializer(Zero64);
     }
     MethodNumVar->setSection(".CHERI_CALLER");
     addUsedGlobal(MethodNumVar);
