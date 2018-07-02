@@ -9212,6 +9212,14 @@ class RISCVTargetCodeGenInfo : public TargetCodeGenInfo {
 public:
   RISCVTargetCodeGenInfo(CodeGen::CodeGenTypes &CGT, unsigned XLen)
       : TargetCodeGenInfo(new RISCVABIInfo(CGT, XLen)) {}
+
+  unsigned getDefaultAS() const override {
+    const TargetInfo &Target = getABIInfo().getContext().getTargetInfo();
+    return Target.areAllPointersCapabilities() ? getCHERICapabilityAS() : 0;
+  }
+  unsigned getCHERICapabilityAS() const override {
+    return 200;
+  }
 };
 } // namespace
 
@@ -9332,6 +9340,7 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
   case llvm::Triple::riscv32:
     return SetCGInfo(new RISCVTargetCodeGenInfo(Types, 32));
   case llvm::Triple::riscv64:
+  case llvm::Triple::riscv64_cheri:
     return SetCGInfo(new RISCVTargetCodeGenInfo(Types, 64));
 
   case llvm::Triple::systemz: {

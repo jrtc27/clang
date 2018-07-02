@@ -44,7 +44,7 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
                                        MacroBuilder &Builder) const {
   Builder.defineMacro("__ELF__");
   Builder.defineMacro("__riscv");
-  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64;
+  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64 || IsCHERI;
   Builder.defineMacro("__riscv_xlen", Is64Bit ? "64" : "32");
   // TODO: modify when more code models and ABIs are supported.
   Builder.defineMacro("__riscv_cmodel_medlow");
@@ -67,11 +67,17 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
 
   if (HasC)
     Builder.defineMacro("__riscv_compressed");
+
+  if (IsCHERI) {
+    Builder.defineMacro("__capability",
+      Twine("__attribute__((cheri_capability))"));
+  }
 }
 
 /// Return true if has this feature, need to sync with handleTargetFeatures.
 bool RISCVTargetInfo::hasFeature(StringRef Feature) const {
-  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64;
+  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64 ||
+                 getTriple().getArch() == llvm::Triple::riscv64_cheri;
   return llvm::StringSwitch<bool>(Feature)
       .Case("riscv", true)
       .Case("riscv32", !Is64Bit)

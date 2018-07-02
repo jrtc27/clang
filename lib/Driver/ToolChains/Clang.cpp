@@ -335,6 +335,7 @@ static void getTargetFeatures(const ToolChain &TC, const llvm::Triple &Triple,
     break;
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
+  case llvm::Triple::riscv64_cheri:
     riscv::getRISCVTargetFeatures(D, Args, Features);
     break;
   case llvm::Triple::systemz:
@@ -521,6 +522,7 @@ static bool useFramePointerForTargetByDefault(const ArgList &Args,
     return false;
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
+  case llvm::Triple::riscv64_cheri:
     return !areOptimizationsEnabled(Args);
   default:
     break;
@@ -1286,6 +1288,7 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::ppc64le:
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
+  case llvm::Triple::riscv64_cheri:
   case llvm::Triple::systemz:
   case llvm::Triple::xcore:
     return false;
@@ -1403,6 +1406,7 @@ void Clang::RenderTargetOptions(const llvm::Triple &EffectiveTriple,
 
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
+  case llvm::Triple::riscv64_cheri:
     AddRISCVTargetArgs(Args, CmdArgs);
     break;
 
@@ -1773,7 +1777,9 @@ void Clang::AddRISCVTargetArgs(const ArgList &Args,
     ABIName = A->getValue();
   else if (Triple.getArch() == llvm::Triple::riscv32)
     ABIName = "ilp32";
-  else if (Triple.getArch() == llvm::Triple::riscv64)
+  // XXX: CHERI ABIs
+  else if (Triple.getArch() == llvm::Triple::riscv64 ||
+           Triple.getArch() == llvm::Triple::riscv64_cheri)
     ABIName = "lp64";
   else
     llvm_unreachable("Unexpected triple!");

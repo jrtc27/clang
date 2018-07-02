@@ -31,6 +31,8 @@ protected:
   bool HasF;
   bool HasD;
   bool HasC;
+  bool IsCHERI = false;
+  int CapSize = -1;
 
 public:
   RISCVTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
@@ -70,6 +72,27 @@ public:
 
   bool handleTargetFeatures(std::vector<std::string> &Features,
                             DiagnosticsEngine &Diags) override;
+
+  unsigned getIntCapWidth() const override { return CapSize; }
+  unsigned getIntCapAlign() const override { return CapSize; }
+
+  uint64_t getCHERICapabilityWidth() const override { return CapSize; }
+
+  uint64_t getCHERICapabilityAlign() const override { return CapSize; }
+
+  uint64_t getPointerWidthV(unsigned AddrSpace) const override {
+    return (AddrSpace == 200) ? CapSize : PointerWidth;
+  }
+
+  uint64_t getPointerRangeV(unsigned AddrSpace) const override {
+    return (AddrSpace == 200) ? getPointerRangeForCHERICapability() : PointerWidth;
+  }
+
+  uint64_t getPointerAlignV(unsigned AddrSpace) const override {
+    return (AddrSpace == 200) ? CapSize : PointerAlign;
+  }
+
+  bool SupportsCapabilities() const override { return IsCHERI; }
 };
 class LLVM_LIBRARY_VISIBILITY RISCV32TargetInfo : public RISCVTargetInfo {
 public:
@@ -89,6 +112,8 @@ public:
     }
     return false;
   }
+
+  uint64_t getPointerRangeForCHERICapability() const override { return 32; }
 };
 class LLVM_LIBRARY_VISIBILITY RISCV64TargetInfo : public RISCVTargetInfo {
 public:
@@ -96,7 +121,13 @@ public:
       : RISCVTargetInfo(Triple, Opts) {
     LongWidth = LongAlign = PointerWidth = PointerAlign = 64;
     IntMaxType = Int64Type = SignedLong;
-    resetDataLayout("e-m:e-p:64:64-i64:64-i128:128-n64-S128");
+    if (Triple.getArch() == llvm::Triple::riscv64_cheri) {
+      IsCHERI = true;
+      CapSize = 128;
+      resetDataLayout("e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128");
+    } else {
+      resetDataLayout("e-m:e-p:64:64-i64:64-i128:128-n64-S128");
+    }
   }
 
   bool setABI(const std::string &Name) override {
@@ -107,6 +138,8 @@ public:
     }
     return false;
   }
+
+  uint64_t getPointerRangeForCHERICapability() const override { return 64; }
 };
 } // namespace targets
 } // namespace clang
