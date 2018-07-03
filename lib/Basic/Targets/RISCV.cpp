@@ -106,5 +106,7 @@ bool RISCVTargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
       HasC = true;
   }
 
+  setDataLayout();
+
   return true;
 }

@@ -24,6 +24,29 @@ namespace targets {
 
 // RISC-V Target
 class RISCVTargetInfo : public TargetInfo {
+  void setDataLayout() {
+    StringRef Layout;
+
+    if (ABI == "ilp32")
+      Layout = "e-m:e-p:32:32-i64:64-n32-S128";
+    else if (ABI == "lp64") {
+      if (IsCHERI)
+        Layout = "e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128";
+      else
+        Layout = "e-m:e-p:64:64-i64:64-i128:128-n64-S128";
+    } else
+      llvm_unreachable("Invalid ABI");
+
+    StringRef PurecapOptions;
+    // Only set globals address space to 200 for cap-table mode
+    if (CapabilityABI)
+      PurecapOptions = llvm::MCTargetOptions::cheriUsesCapabilityTable()
+                           ? "-A200-P200-G200"
+                           : "-A200-P200";
+
+    resetDataLayout((Layout + PurecapOptions).str());
+  }
+
 protected:
   std::string ABI;
   bool HasM;
@@ -33,6 +56,10 @@ protected:
   bool HasC;
   bool IsCHERI = false;
   int CapSize = -1;
+
+  void setCapabilityABITypes() {
+    IntPtrType = TargetInfo::SignedIntCap;
+  }
 
 public:
   RISCVTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
@@ -101,7 +128,6 @@ public:
     IntPtrType = SignedInt;
     PtrDiffType = SignedInt;
     SizeType = UnsignedInt;
-    resetDataLayout("e-m:e-p:32:32-i64:64-n32-S128");
   }
 
   bool setABI(const std::string &Name) override {
@@ -124,9 +150,6 @@ public:
     if (Triple.getArch() == llvm::Triple::riscv64_cheri) {
       IsCHERI = true;
       CapSize = 128;
-      resetDataLayout("e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128");
-    } else {
-      resetDataLayout("e-m:e-p:64:64-i64:64-i128:128-n64-S128");
     }
   }
 
@@ -134,6 +157,12 @@ public:
     // TODO: support lp64f and lp64d ABIs.
     if (Name == "lp64") {
       ABI = Name;
+      return true;
+    }
+    if (IsCHERI && Name == "purecap") {
+      setCapabilityABITypes();
+      CapabilityABI = true;
+      ABI = "lp64";
       return true;
     }
     return false;
