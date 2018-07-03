@@ -334,6 +334,7 @@ static void getTargetFeatures(const ToolChain &TC, const llvm::Triple &Triple,
     ppc::getPPCTargetFeatures(D, Triple, Args, Features);
     break;
   case llvm::Triple::riscv32:
+  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
   case llvm::Triple::riscv64_cheri:
     riscv::getRISCVTargetFeatures(D, Args, Features);
@@ -521,6 +522,7 @@ static bool useFramePointerForTargetByDefault(const ArgList &Args,
     // WebAssembly never wants frame pointers.
     return false;
   case llvm::Triple::riscv32:
+  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
   case llvm::Triple::riscv64_cheri:
     return !areOptimizationsEnabled(Args);
@@ -1287,6 +1289,7 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::hexagon:
   case llvm::Triple::ppc64le:
   case llvm::Triple::riscv32:
+  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
   case llvm::Triple::riscv64_cheri:
   case llvm::Triple::systemz:
@@ -1405,6 +1408,7 @@ void Clang::RenderTargetOptions(const llvm::Triple &EffectiveTriple,
     break;
 
   case llvm::Triple::riscv32:
+  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
   case llvm::Triple::riscv64_cheri:
     AddRISCVTargetArgs(Args, CmdArgs);
@@ -1771,21 +1775,11 @@ void Clang::AddRISCVTargetArgs(const ArgList &Args,
                                ArgStringList &CmdArgs) const {
   // FIXME: currently defaults to the soft-float ABIs. Will need to be
   // expanded to select ilp32f, ilp32d, lp64f, lp64d when appropriate.
-  const char *ABIName = nullptr;
   const llvm::Triple &Triple = getToolChain().getTriple();
-  if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ))
-    ABIName = A->getValue();
-  else if (Triple.getArch() == llvm::Triple::riscv32)
-    ABIName = "ilp32";
-  // XXX: CHERI ABIs
-  else if (Triple.getArch() == llvm::Triple::riscv64 ||
-           Triple.getArch() == llvm::Triple::riscv64_cheri)
-    ABIName = "lp64";
-  else
-    llvm_unreachable("Unexpected triple!");
+  StringRef ABIName = riscv::getRISCVABI(Args, Triple);
 
   CmdArgs.push_back("-target-abi");
-  CmdArgs.push_back(ABIName);
+  CmdArgs.push_back(ABIName.data());
 }
 
 void Clang::AddSparcTargetArgs(const ArgList &Args,

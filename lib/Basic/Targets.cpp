@@ -374,6 +374,7 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     return new AMDGPUTargetInfo(Triple, Opts);
 
   case llvm::Triple::riscv32:
+  case llvm::Triple::riscv32_cheri:
     // TODO: add cases for FreeBSD, NetBSD, RTEMS once tested.
     if (os == llvm::Triple::Linux)
       return new LinuxTargetInfo<RISCV32TargetInfo>(Triple, Opts);

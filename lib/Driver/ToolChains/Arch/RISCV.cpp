@@ -373,6 +373,12 @@ void riscv::getRISCVTargetFeatures(const Driver &D, const ArgList &Args,
 StringRef riscv::getRISCVABI(const ArgList &Args, const llvm::Triple &Triple) {
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ))
     return A->getValue();
-
-  return Triple.getArch() == llvm::Triple::riscv32 ? "ilp32" : "lp64";
+  else if (Triple.getArch() == llvm::Triple::riscv32 ||
+           Triple.getArch() == llvm::Triple::riscv32_cheri)
+    return "ilp32";
+  else if (Triple.getArch() == llvm::Triple::riscv64 ||
+           Triple.getArch() == llvm::Triple::riscv64_cheri)
+    return "lp64";
+  else
+    llvm_unreachable("Unexpected triple!");
 }

@@ -27,9 +27,12 @@ class RISCVTargetInfo : public TargetInfo {
   void setDataLayout() {
     StringRef Layout;
 
-    if (ABI == "ilp32")
-      Layout = "e-m:e-p:32:32-i64:64-n32-S128";
-    else if (ABI == "lp64") {
+    if (ABI == "ilp32") {
+      if (IsCHERI)
+        Layout = "e-m:e-pf200:64:64:64:32-p:32:32-i64:64-n32-S128";
+      else
+        Layout = "e-m:e-p:32:32-i64:64-n32-S128";
+    } else if (ABI == "lp64") {
       if (IsCHERI)
         Layout = "e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128";
       else
@@ -37,7 +40,7 @@ class RISCVTargetInfo : public TargetInfo {
     } else
       llvm_unreachable("Invalid ABI");
 
-    StringRef PurecapOptions;
+    StringRef PurecapOptions = "";
     // Only set globals address space to 200 for cap-table mode
     if (CapabilityABI)
       PurecapOptions = llvm::MCTargetOptions::cheriUsesCapabilityTable()
@@ -128,12 +131,22 @@ public:
     IntPtrType = SignedInt;
     PtrDiffType = SignedInt;
     SizeType = UnsignedInt;
+    if (Triple.getArch() == llvm::Triple::riscv32_cheri) {
+      IsCHERI = true;
+      CapSize = 64;
+    }
   }
 
   bool setABI(const std::string &Name) override {
     // TODO: support ilp32f and ilp32d ABIs.
     if (Name == "ilp32") {
       ABI = Name;
+      return true;
+    }
+    if (IsCHERI && Name == "purecap") {
+      setCapabilityABITypes();
+      CapabilityABI = true;
+      ABI = "ilp32";
       return true;
     }
     return false;
