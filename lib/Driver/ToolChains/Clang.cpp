@@ -334,9 +334,7 @@ static void getTargetFeatures(const ToolChain &TC, const llvm::Triple &Triple,
     ppc::getPPCTargetFeatures(D, Triple, Args, Features);
     break;
   case llvm::Triple::riscv32:
-  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
-  case llvm::Triple::riscv64_cheri:
     riscv::getRISCVTargetFeatures(D, Args, Features);
     break;
   case llvm::Triple::systemz:
@@ -522,9 +520,7 @@ static bool useFramePointerForTargetByDefault(const ArgList &Args,
     // WebAssembly never wants frame pointers.
     return false;
   case llvm::Triple::riscv32:
-  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
-  case llvm::Triple::riscv64_cheri:
     return !areOptimizationsEnabled(Args);
   default:
     break;
@@ -1289,9 +1285,7 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::hexagon:
   case llvm::Triple::ppc64le:
   case llvm::Triple::riscv32:
-  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
-  case llvm::Triple::riscv64_cheri:
   case llvm::Triple::systemz:
   case llvm::Triple::xcore:
     return false;
@@ -1408,9 +1402,7 @@ void Clang::RenderTargetOptions(const llvm::Triple &EffectiveTriple,
     break;
 
   case llvm::Triple::riscv32:
-  case llvm::Triple::riscv32_cheri:
   case llvm::Triple::riscv64:
-  case llvm::Triple::riscv64_cheri:
     AddRISCVTargetArgs(Args, CmdArgs);
     break;
 

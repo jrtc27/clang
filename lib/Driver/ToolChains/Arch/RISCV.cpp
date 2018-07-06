@@ -43,8 +43,18 @@ static StringRef getExtensionType(StringRef Ext) {
 }
 
 static bool isSupportedExtension(StringRef Ext) {
-  // LLVM does not support "sx", "s" nor "x" extensions.
-  return false;
+  // LLVM does not support "sx", "s" nor "x" extensions, except for xcheri.
+  if (Ext == "xcheri")
+    return true;
+  else
+    return false;
+}
+
+static StringRef getExtensionFeature(StringRef Ext) {
+  if (Ext == "xcheri")
+    return "cheri";
+  else
+    return Ext;
 }
 
 // Extensions may have a version number, and may be separated by
@@ -196,7 +206,7 @@ static void getExtensionFeatures(const Driver &D,
         << MArch << Error << Ext;
       return;
     }
-    Features.push_back(Args.MakeArgString("+" + Ext));
+    Features.push_back(Args.MakeArgString("+" + getExtensionFeature(Ext)));
   }
 }
 
@@ -373,11 +383,9 @@ void riscv::getRISCVTargetFeatures(const Driver &D, const ArgList &Args,
 StringRef riscv::getRISCVABI(const ArgList &Args, const llvm::Triple &Triple) {
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ))
     return A->getValue();
-  else if (Triple.getArch() == llvm::Triple::riscv32 ||
-           Triple.getArch() == llvm::Triple::riscv32_cheri)
+  else if (Triple.getArch() == llvm::Triple::riscv32)
     return "ilp32";
-  else if (Triple.getArch() == llvm::Triple::riscv64 ||
-           Triple.getArch() == llvm::Triple::riscv64_cheri)
+  else if (Triple.getArch() == llvm::Triple::riscv64)
     return "lp64";
   else
     llvm_unreachable("Unexpected triple!");

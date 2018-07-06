@@ -44,7 +44,7 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
                                        MacroBuilder &Builder) const {
   Builder.defineMacro("__ELF__");
   Builder.defineMacro("__riscv");
-  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64 || IsCHERI;
+  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64;
   Builder.defineMacro("__riscv_xlen", Is64Bit ? "64" : "32");
   // TODO: modify when more code models and ABIs are supported.
   Builder.defineMacro("__riscv_cmodel_medlow");
@@ -93,8 +93,7 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
 
 /// Return true if has this feature, need to sync with handleTargetFeatures.
 bool RISCVTargetInfo::hasFeature(StringRef Feature) const {
-  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64 ||
-                 getTriple().getArch() == llvm::Triple::riscv64_cheri;
+  bool Is64Bit = getTriple().getArch() == llvm::Triple::riscv64;
   return llvm::StringSwitch<bool>(Feature)
       .Case("riscv", true)
       .Case("riscv32", !Is64Bit)
@@ -104,6 +103,7 @@ bool RISCVTargetInfo::hasFeature(StringRef Feature) const {
       .Case("f", HasF)
       .Case("d", HasD)
       .Case("c", HasC)
+      .Case("cheri", IsCHERI)
       .Default(false);
 }
 
@@ -121,6 +121,10 @@ bool RISCVTargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
       HasD = true;
     else if (Feature == "+c")
       HasC = true;
+    else if (Feature == "+cheri") {
+      IsCHERI = true;
+      CapSize = PointerWidth * 2;
+    }
   }
 
   setDataLayout();

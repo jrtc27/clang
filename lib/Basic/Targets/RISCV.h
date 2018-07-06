@@ -131,10 +131,6 @@ public:
     IntPtrType = SignedInt;
     PtrDiffType = SignedInt;
     SizeType = UnsignedInt;
-    if (Triple.getArch() == llvm::Triple::riscv32_cheri) {
-      IsCHERI = true;
-      CapSize = 64;
-    }
   }
 
   bool setABI(const std::string &Name) override {
@@ -143,7 +139,7 @@ public:
       ABI = Name;
       return true;
     }
-    if (IsCHERI && Name == "purecap") {
+    if (Name == "purecap") {
       setCapabilityABITypes();
       CapabilityABI = true;
       ABI = "ilp32";
@@ -160,10 +156,6 @@ public:
       : RISCVTargetInfo(Triple, Opts) {
     LongWidth = LongAlign = PointerWidth = PointerAlign = 64;
     IntMaxType = Int64Type = SignedLong;
-    if (Triple.getArch() == llvm::Triple::riscv64_cheri) {
-      IsCHERI = true;
-      CapSize = 128;
-    }
   }
 
   bool setABI(const std::string &Name) override {
@@ -172,7 +164,7 @@ public:
       ABI = Name;
       return true;
     }
-    if (IsCHERI && Name == "purecap") {
+    if (Name == "purecap") {
       setCapabilityABITypes();
       CapabilityABI = true;
       ABI = "lp64";

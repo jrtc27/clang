@@ -9338,10 +9338,8 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
     return SetCGInfo(new MSP430TargetCodeGenInfo(Types));
 
   case llvm::Triple::riscv32:
-  case llvm::Triple::riscv32_cheri:
     return SetCGInfo(new RISCVTargetCodeGenInfo(Types, 32));
   case llvm::Triple::riscv64:
-  case llvm::Triple::riscv64_cheri:
     return SetCGInfo(new RISCVTargetCodeGenInfo(Types, 64));
 
   case llvm::Triple::systemz: {
