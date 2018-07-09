@@ -615,6 +615,14 @@ void tools::gnutools::Assembler::ConstructJob(Compilation &C,
   }
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64: {
+    llvm::Reloc::Model RelocationModel;
+    unsigned PICLevel;
+    bool IsPIE;
+    std::tie(RelocationModel, PICLevel, IsPIE) =
+      ParsePICArgs(getToolChain(), Args);
+    if (RelocationModel != llvm::Reloc::Static)
+      CmdArgs.push_back("-fpic");
+
     StringRef ABIName = riscv::getRISCVABI(Args, getToolChain().getTriple());
     CmdArgs.push_back("-mabi");
     CmdArgs.push_back(ABIName.data());
